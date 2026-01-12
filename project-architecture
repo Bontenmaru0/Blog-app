@@ -1,0 +1,34 @@
+src/
+├── app/
+│   ├── store.ts          
+│   ├── hooks.ts          
+│
+├── features/
+│   ├── auth/
+│   │   ├── authSlice.ts
+│   │   ├── authService.ts
+│   │   └── authTypes.ts
+│   │
+│   └── blog/
+│       ├── blogSlice.ts
+│       ├── blogService.ts
+│       └── blogTypes.ts
+│
+├── pages/
+│   ├── Login.tsx
+│   ├── Register.tsx
+│   ├── CreateBlog.tsx
+│   ├── EditBlog.tsx
+│   └── BlogList.tsx
+│
+├── routes/
+│   └── ProtectedRoute.tsx
+│
+├── lib/
+│   └── supabase.ts
+│
+├── types/
+│   └── index.ts
+│
+├── App.tsx
+└── main.tsx

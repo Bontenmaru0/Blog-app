@@ -95,10 +95,16 @@ const authSlice = createSlice({
         state.loginError = action.error.message || 'Login failed'
       })
       //logout cases
+      .addCase(logout.pending, (state) => {
+        state.loading = true
+        state.logoutError = null
+      })
       .addCase(logout.fulfilled, (state) => {
         state.user = null
+        state.loading = false
       })
       .addCase(logout.rejected, (state) => {
+        state.loading = false
         state.logoutError = 'Logout failed'
       })
     },

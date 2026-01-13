@@ -4,7 +4,7 @@ import { logout } from '../features/auth/authSlice'
 
 export default function Nav() {
   const dispatch = useAppDispatch()
-  const { user } = useAppSelector((state) => state.auth)
+  const { user, loading } = useAppSelector((state) => state.auth)
 
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light">
@@ -12,7 +12,7 @@ export default function Nav() {
         <Link className="navbar-brand" to="/">Blog App</Link>
         {user ? (
           <div className="d-flex">
-            <span className="navbar-text">{user.email} | <a className="text-decoration-none" href="#" onClick={() => dispatch(logout())}>Logout</a></span>
+            <span className="navbar-text">{user.email} | {loading ? <span>Logging out...</span> : <a className="text-decoration-none" href="#" onClick={() => dispatch(logout())}>Logout</a>}</span>
           </div>
         ) : (
           <div className="d-flex">

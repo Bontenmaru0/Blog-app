@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { registerUser, loginUser, logoutUser, getSession } from './authService'
+import { registerWithProfile, loginUser, logoutUser, getSession } from './authService'
 
 interface AuthState {
   user: any | null
@@ -22,7 +22,7 @@ const initialState: AuthState = {
 export const register = createAsyncThunk(
   'auth/register',
   async ({ email, password }: { email: string; password: string }) => {
-    return await registerUser(email, password)
+    return await registerWithProfile(email, password)
   }
 )
 
@@ -72,7 +72,7 @@ const authSlice = createSlice({
         state.registerError = null
       })
       .addCase(register.fulfilled, (state, action) => {
-        state.user = action.payload.user
+        state.user = action.payload
         state.loading = false
         state.registerError = null
       })

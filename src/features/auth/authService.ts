@@ -1,4 +1,5 @@
 import { supabase } from '../../lib/supabase'
+import { upsertProfile } from '../profiles/profilesService'
 
 export const getSession = async () => {
   const { data, error } = await supabase.auth.getSession()
@@ -13,7 +14,20 @@ export const registerUser = async (email: string, password: string) => {
   })
 
   if (error) throw error
-  return data
+  if (!data.user) throw new Error('User not created')
+
+  return data.user
+}
+
+export const registerWithProfile = async (
+  email: string,
+  password: string
+) => {
+  const user = await registerUser(email, password)
+
+  await upsertProfile( user.id, '', '')
+
+  return user
 }
 
 export const loginUser = async (email: string, password: string) => {

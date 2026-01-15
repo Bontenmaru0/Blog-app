@@ -47,7 +47,7 @@ export const fetchArticles = async (
 }
 
 export const createArticle = async (title: string, content: string) => {
-  const { data, error } = await supabase.rpc('create_article', {
+  const { data, error } = await supabase.rpc('insert_article', {
     p_title: title,
     p_content: content,
   })

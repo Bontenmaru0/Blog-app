@@ -112,7 +112,16 @@ export default function MainPage() {
 
               {articles.map((article: any) => {
                 const isDeleting = !!deleteLoadingById[article.id]
-                const formattedDateTime = new Date(article.created_at).toLocaleString()
+                function timeAgo(dateString: string) {
+                  const diff = Date.now() - new Date(dateString).getTime()
+                  const mins = Math.floor(diff / 60000)
+                  if (mins < 1) return 'just now'
+                  if (mins < 60) return `${mins} minutes ago`
+                  const hours = Math.floor(mins / 60)
+                  if (hours < 24) return `${hours} hours ago`
+                  const days = Math.floor(hours / 24)
+                  return `${days} days ago`
+                }
 
                 return (
                   <div key={article.id} className="card mb-3 rounded-0">
@@ -120,7 +129,7 @@ export default function MainPage() {
                       <h4>{article.title}</h4>
                       <p>{article.content}</p>
                       <small className="text-muted">
-                      Published by {article.author} • {formattedDateTime}
+                      Published by {article.author} • {timeAgo(article.created_at)}
                       </small>
 
                       {user && (

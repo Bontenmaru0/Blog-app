@@ -1,10 +1,9 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
-import { register } from '../features/auth/authSlice'
+import { registerThunk } from '../features/auth/authSlice'
 
 export default function Register() {
-  const dispatch = useAppDispatch()
   const { registerLoading, registerError } = useAppSelector((state) => state.auth)
 
   const [email, setEmail] = useState('')
@@ -21,11 +20,19 @@ export default function Register() {
     verifyPassword.length > 0 &&
     password !== verifyPassword
 
-  const handleSubmit = (e: React.FormEvent) => {
+    
+  const dispatch = useAppDispatch()
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!passwordsMatch) return
-    dispatch(register({ email, password }))
-  }
+
+    try {
+        await dispatch(registerThunk({ email, password })).unwrap()
+        window.showToast('Welcome aboard 👋', 'Registered successfully, we are logged you in.', 'success')
+    } catch (err) {
+        // ❌ error → do nothing here (UI already shows registerError)
+    }
+  } 
 
   return (
     <div className="min-vh-100 d-flex align-items-center justify-content-center bg-white">

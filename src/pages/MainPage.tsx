@@ -1,46 +1,61 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
-import { getArticles } from '../features/blog/blogSlice'
+import { fetchArticlesThunk, deleteArticleThunk } from '../features/blog/blogSlice'
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
-import { Link } from 'react-router-dom'
 import CreatePostCard from '../components/CreatePost'
+// import EditPostCard from '../components/EditPost'
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
-  const { articles, total, contentLoading, blogError } = useAppSelector((state) => state.blog)
-  const dispatch = useAppDispatch()
+  const { articles, total, contentLoading, blogError } = useAppSelector(
+    (state) => state.blog
+  )
 
   const [searchTerm, setSearchTitle] = useState('')
   const [page, setPage] = useState(1)
-
   const [isCreating, setIsCreating] = useState(false)
 
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  const deleteLoadingById = useAppSelector(
+    (state) => state.blog.deleteArticleLoadingById
+  )
+
   const limit = 5
-  // const isLastPage = page * limit >= total
+  const dispatch = useAppDispatch()
 
   useEffect(() => {
-    dispatch(getArticles({ search: searchTerm, limit: 5, page }))
+    dispatch(fetchArticlesThunk({ search: searchTerm, limit, page }))
   }, [dispatch, searchTerm, page])
 
   useEffect(() => {
-  window.scrollTo({
-    top: 0,
-    behavior: 'smooth',
-  })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [page])
+
+  // ✅ ADDED: delete handler with toast
+  const handleDelete = async (articleId: string) => {
+    try {
+      await dispatch(deleteArticleThunk(articleId)).unwrap()
+      window.showToast('Deleted', 'Article deleted successfully.', 'success')
+    } catch {
+      window.showToast('Error', 'Failed to delete article. Something went wrong', 'error')
+    } finally {
+      setConfirmDeleteId(null)
+    }
+  }
 
   return (
     <div className="d-flex flex-column min-vh-100">
       <Nav />
+
       <main className="flex-grow-1 container py-4">
-        {/* Search bar */}
         <div className="d-flex justify-content-end p-3 bg-dark">
           <div className="input-group rounded-0" style={{ maxWidth: '250px' }}>
             <input
               type="text"
               className="form-control rounded-0"
-              placeholder="Search"
+              placeholder="Search Title"
               value={searchTerm}
               onChange={(e) => setSearchTitle(e.target.value)}
             />
@@ -57,7 +72,6 @@ export default function MainPage() {
               Short reads on focus, discipline, and everyday wisdom.
             </p>
 
-            {/* Recent Posts */}
             <div className="mt-4">
               <div className="d-flex align-items-center gap-2 mb-3 justify-content-between">
                 <div className="d-flex align-items-center gap-2">
@@ -75,17 +89,18 @@ export default function MainPage() {
                   )}
                 </div>
 
-                <button
-                  className="btn btn-outline-dark btn-md rounded-0"
-                  onClick={() => setIsCreating(true)}
-                >
-                  Create Post
-                </button>
+                {user && (
+                  <button
+                    className="btn btn-outline-dark btn-md rounded-0"
+                    onClick={() => setIsCreating(true)}
+                  >
+                    Create Post
+                  </button>
+                )}
               </div>
 
               {blogError && <p className="text-danger">{blogError}</p>}
 
-              {/*triggered by create post button */}
               <CreatePostCard
                 visible={isCreating}
                 onCancel={() => setIsCreating(false)}
@@ -95,34 +110,65 @@ export default function MainPage() {
                 <p className="text-muted">No available articles. Stay tuned!</p>
               )}
 
-              {articles.map((article: any) => (
-                <div key={article._id} className="card mb-3 rounded-0">
-                  <div className="card-body position-relative">
-                    <h4 className="card-title">{article.title}</h4>
-                    <p className="card-text">{article.content}</p>
-                    <small className="text-muted">
-                      Published By {article.author} •{' '}
-                      {article.created_at.toLocaleDateString()}
-                    </small>
+              {articles.map((article: any) => {
+                const isDeleting = !!deleteLoadingById[article.id]
+                const formattedDateTime = new Date(article.created_at).toLocaleString()
 
-                    {user && (
-                      <div className="position-absolute bottom-0 end-0 mb-2 me-2">
-                        <Link className="text-dark" to="/">EDIT</Link> |{' '}
-                        <Link className="text-dark" to="/">DELETE</Link>
-                      </div>
-                    )}
+                return (
+                  <div key={article.id} className="card mb-3 rounded-0">
+                    <div className="card-body position-relative">
+                      <h4>{article.title}</h4>
+                      <p>{article.content}</p>
+                      <small className="text-muted">
+                      Published by {article.author} • {formattedDateTime}
+                      </small>
+
+                      {user && (
+                        <div className="position-absolute bottom-0 end-0 mb-2 me-2">
+                          {confirmDeleteId !== article.id ? (
+                            <button
+                              className="btn btn-link p-0 text-dark"
+                              onClick={() => setConfirmDeleteId(article.id)}
+                            >
+                              DELETE
+                            </button>
+                          ) : (
+                            <>
+                              <button
+                                className="btn btn-link p-0 text-danger me-2"
+                                disabled={isDeleting}
+                                onClick={() => handleDelete(article.id)} // ✅ changed
+                              >
+                                {isDeleting ? 'DELETING…' : 'YES'}
+                              </button>
+                              <button
+                                className="btn btn-link p-0"
+                                onClick={() => setConfirmDeleteId(null)}
+                              >
+                                NO
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
-              {/* 🔢 PAGINATION (UNCHANGED, FULL) */}
               {total > 0 && (
                 <div className="d-flex justify-content-center mt-3 gap-2 flex-wrap">
                   {(() => {
                     const totalPages = Math.ceil(total / limit)
                     const pageWindow = 5
-                    let startPage = Math.max(1, page - Math.floor(pageWindow / 2))
-                    let endPage = Math.min(totalPages, startPage + pageWindow - 1)
+                    let startPage = Math.max(
+                      1,
+                      page - Math.floor(pageWindow / 2)
+                    )
+                    let endPage = Math.min(
+                      totalPages,
+                      startPage + pageWindow - 1
+                    )
                     startPage = Math.max(1, endPage - pageWindow + 1)
 
                     const pages = Array.from(
@@ -152,7 +198,9 @@ export default function MainPage() {
                           <button
                             key={pNum}
                             className={`btn ${
-                              pNum === page ? 'btn-dark' : 'btn-outline-dark'
+                              pNum === page
+                                ? 'btn-dark'
+                                : 'btn-outline-dark'
                             }`}
                             onClick={() => setPage(pNum)}
                           >
@@ -163,7 +211,9 @@ export default function MainPage() {
                         <button
                           className="btn btn-outline-dark"
                           disabled={page === totalPages}
-                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          onClick={() =>
+                            setPage((p) => Math.min(totalPages, p + 1))
+                          }
                         >
                           &gt;
                         </button>
@@ -184,6 +234,7 @@ export default function MainPage() {
           </div>
         </div>
       </main>
+
       <Footer />
     </div>
   )

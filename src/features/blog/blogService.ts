@@ -1,11 +1,11 @@
 // src/features/blog/blogService.ts
+import { supabase } from '../../lib/supabase'
 
 export interface Article {
   id: string
   title: string
   content: string
-  created_at: Date
-  // add other fields if you have them
+  created_at: string
 }
 
 export interface FetchArticlesResponse {
@@ -20,32 +20,45 @@ export const fetchArticles = async (
 ): Promise<FetchArticlesResponse> => {
   const params = new URLSearchParams()
 
-  if (search) params.append("search", search)
-  params.append("limit", limit.toString())
-  params.append("page", page.toString())
+  if (search) params.append('search', search)
+  params.append('limit', limit.toString())
+  params.append('page', page.toString())
 
-  const FUNCTION_URL = "https://smbwpkseveluqyqillgq.supabase.co/functions/v1/get-article"
+  const FUNCTION_URL =
+    'https://smbwpkseveluqyqillgq.supabase.co/functions/v1/get-article'
 
   const res = await fetch(`${FUNCTION_URL}?${params.toString()}`)
 
   if (!res.ok) {
-    const text = await res.text()
-    console.error("Edge function error:", text)
-    throw new Error(`Failed to fetch articles: ${text}`)
+    throw new Error(await res.text())
   }
 
   const json = await res.json()
 
-  const articlesWithDate = Array.isArray(json.data)
-    ? json.data.map((article: Article) => ({
-        ...article,
-        created_at: new Date(article.created_at),
-      }))
-    : []
-
-  // runtime safety (extra protection)
   return {
-    data: articlesWithDate,
-    total: typeof json.total === "number" ? json.total : 0,
+    data: Array.isArray(json.data)
+      ? json.data.map((a: any) => ({
+          ...a,
+          created_at: a.created_at,
+        }))
+      : [],
+    total: typeof json.total === 'number' ? json.total : 0,
   }
+}
+
+export const createArticle = async (title: string, content: string) => {
+  const { data, error } = await supabase.rpc('create_article', {
+    p_title: title,
+    p_content: content,
+  })
+  if (error) throw error
+  return data
+}
+
+export const deleteArticle = async (articleId: string) => {
+  const { error } = await supabase.rpc('delete_article', {
+    p_article_id: articleId,
+  })
+  if (error) throw error
+  return articleId
 }

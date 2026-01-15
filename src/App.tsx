@@ -3,7 +3,7 @@ import { Provider } from 'react-redux'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { store } from './app/store'
 import { useAppDispatch, useAppSelector } from './app/hooks'
-import { checkSession } from './features/auth/authSlice'
+import { checkSessionThunk } from './features/auth/authSlice'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import MainPage from './pages/MainPage'
@@ -13,7 +13,7 @@ function AppContent() {
   const { user } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
-    dispatch(checkSession())
+    dispatch(checkSessionThunk())
   }, [dispatch])
   
 

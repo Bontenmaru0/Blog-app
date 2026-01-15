@@ -1,18 +1,25 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
-import { login } from '../features/auth/authSlice'
+import { loginThunk } from '../features/auth/authSlice'
 
 export default function Login() {
-  const dispatch = useAppDispatch()
   const { logginLoading, loginError } = useAppSelector((state) => state.auth)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const dispatch = useAppDispatch()
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    dispatch(login({ email, password }))
+
+    try {
+        await dispatch(loginThunk({ email, password })).unwrap()
+
+      window.showToast('Welcome back', 'Login successfully!', 'success')
+    } catch (err) {
+        // ❌ error → do nothing here (UI already shows loginError)
+    }
   }
 
   return (

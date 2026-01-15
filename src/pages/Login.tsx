@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../app/hooks.ts'
+import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { login } from '../features/auth/authSlice'
 
 export default function Login() {
   const dispatch = useAppDispatch()
-  const { loading, loginError } = useAppSelector((state) => state.auth)  // Access auth state
+  const { logginLoading, loginError } = useAppSelector((state) => state.auth)
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
 
@@ -15,44 +16,83 @@ export default function Login() {
   }
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <form onSubmit={handleSubmit} className="card p-4 shadow">
-            <h2 className="text-center mb-4">Login</h2>
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-white">
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-5 col-lg-4">
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 border border-dark"
+              style={{ backgroundColor: '#fff' }}
+            >
+              {/* Title */}
+              <h2 className="text-center mb-1 fw-normal">Modern Samurai</h2>
+              <p
+                className="text-center text-muted mb-4"
+                style={{ fontSize: '0.9rem' }}
+              >
+                Enter with focus and intent
+              </p>
 
-            {/* Display error message if login fails */}
-            {loginError && <div className="alert alert-danger">{loginError}</div>}
+              {/* Error */}
+              {loginError && (
+                <div
+                  className="text-center text-dark mb-3"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  {loginError}
+                </div>
+              )}
 
-            <div className="mb-3">
-              <input
-                required
-                type="email"
-                className="form-control"
-                placeholder="Email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+              {/* Email */}
+              <div className="mb-3">
+                <input
+                  required
+                  type="email"
+                  className="form-control border-dark rounded-0"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={logginLoading}
+                />
+              </div>
 
-            <div className="mb-3">
-              <input
-                type="password"
-                className="form-control"
-                placeholder="Password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+              {/* Password */}
+              <div className="mb-3">
+                <input
+                  type="password"
+                  className="form-control border-dark rounded-0"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={logginLoading}
+                />
+              </div>
 
-            <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
+              {/* Button */}
+              <button
+                type="submit"
+                className="btn btn-dark w-100 rounded-0 mt-2"
+                disabled={logginLoading}
+              >
+                {logginLoading ? 'Entering...' : 'Enter'}
+              </button>
 
-            <p className="text-center mt-3">Don't have an account? <Link to="/register" className="text-decoration-none">Register here</Link> | <Link to="/MainPage" className="text-decoration-none">Back to Main Page</Link></p>
-          </form>
+              {/* Links */}
+              <div
+                className="text-center mt-4"
+                style={{ fontSize: '0.85rem' }}
+              >
+                <Link to="/register" className="text-dark text-decoration-none">
+                  Create account
+                </Link>
+                <span className="mx-2 text-muted">|</span>
+                <Link to="/MainPage" className="text-dark text-decoration-none">
+                  Back to Blog
+                </Link>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

@@ -7,6 +7,12 @@ export const getSession = async () => {
   return data
 }
 
+export const getUserInfo = async () => {
+  const { data, error } = await supabase.auth.getUser()
+  if (error) throw error
+  return data
+}
+
 export const registerUser = async (email: string, password: string) => {
   const { data, error } = await supabase.auth.signUp({
     email,
@@ -25,7 +31,12 @@ export const registerWithProfile = async (
 ) => {
   const user = await registerUser(email, password)
 
-  await upsertProfile( user.id, '', '')
+  try {
+    await upsertProfile(user.id, '', '')
+  } catch (err) {
+    console.error('Profile upsert failed:', err)
+    // 👇 do NOT throw — registration should still complete
+  }
 
   return user
 }

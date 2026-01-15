@@ -15,6 +15,7 @@ function AppContent() {
   useEffect(() => {
     dispatch(checkSession())
   }, [dispatch])
+  
 
 
   return (

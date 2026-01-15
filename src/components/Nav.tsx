@@ -7,9 +7,9 @@ export default function Nav() {
   const { user, loading } = useAppSelector((state) => state.auth)
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-light bg-light">
+    <nav className="navbar navbar-expand-lg navbar-light bg-light sticky-top border-bottom">
       <div className="container-fluid">
-        <Link className="navbar-brand" to="/">Blog App</Link>
+        <Link className="navbar-brand" to="/"> Modern Samurai / Blog</Link>
         {user ? (
           <div className="d-flex">
             <span className="navbar-text">{user.email} | {loading ? <span>Logging out...</span> : <a className="text-decoration-none" href="#" onClick={() => dispatch(logout())}>Logout</a>}</span>

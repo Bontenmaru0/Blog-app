@@ -1,58 +1,133 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../app/hooks.ts'
+import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { register } from '../features/auth/authSlice'
 
 export default function Register() {
   const dispatch = useAppDispatch()
-  const { loading, registerError } = useAppSelector((state) => state.auth)
+  const { registerLoading, registerError } = useAppSelector((state) => state.auth)
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [verifyPassword, setVerifyPassword] = useState('')
+
+  const passwordsMatch =
+    password.length === 0 ||
+    verifyPassword.length === 0 ||
+    password === verifyPassword
+
+  const showPasswordError =
+    password.length > 0 &&
+    verifyPassword.length > 0 &&
+    password !== verifyPassword
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    if (!passwordsMatch) return
     dispatch(register({ email, password }))
   }
 
   return (
-    <div className="container mt-5">
-      <div className="row justify-content-center">
-        <div className="col-md-6">
-          <form onSubmit={handleSubmit} className="card p-4 shadow">
-            <h2 className="text-center mb-4">Register</h2>
+    <div className="min-vh-100 d-flex align-items-center justify-content-center bg-white">
+      <div className="container">
+        <div className="row justify-content-center">
+          <div className="col-md-5 col-lg-4">
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 border border-dark"
+              style={{ backgroundColor: '#fff' }}
+            >
+              {/* Title */}
+              <h2 className="text-center mb-1 fw-normal">Modern Samurai</h2>
+              <p
+                className="text-center text-muted mb-4"
+                style={{ fontSize: '0.9rem' }}
+              >
+                Begin your discipline
+              </p>
 
-            {registerError && <div className="alert alert-danger">{registerError}</div>}
+              {/* Errors */}
+              {showPasswordError && (
+                <div
+                  className="text-center text-dark mb-3"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  Passwords do not match
+                </div>
+              )}
 
-            <div className="mb-3">
-              <input
-                required
-                type="email"
-                className="form-control"
-                placeholder="Email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+              {registerError && (
+                <div
+                  className="text-center text-dark mb-3"
+                  style={{ fontSize: '0.85rem' }}
+                >
+                  {registerError}
+                </div>
+              )}
 
-            <div className="mb-3">
-              <input
-                required
-                type="password"
-                className="form-control"
-                placeholder="Password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                disabled={loading}
-              />
-            </div>
+              {/* Email */}
+              <div className="mb-3">
+                <input
+                  required
+                  type="email"
+                  className="form-control border-dark rounded-0"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={registerLoading}
+                />
+              </div>
 
-            <button type="submit" className="btn btn-success w-100" disabled={loading}>
-              {loading ? 'Registering...' : 'Register'}
-            </button>
+              {/* Password */}
+              <div className="mb-3">
+                <input
+                  required
+                  type="password"
+                  className="form-control border-dark rounded-0"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={registerLoading}
+                />
+              </div>
 
-            <p className="text-center mt-3">Already have an account? <Link to="/login" className="text-decoration-none">Login here</Link> | <Link to="/MainPage" className="text-decoration-none">Back to Main Page</Link></p>
-          </form>
+              {/* Verify Password */}
+              <div className="mb-3">
+                <input
+                  required
+                  type="password"
+                  className="form-control border-dark rounded-0"
+                  placeholder="Verify Password"
+                  value={verifyPassword}
+                  onChange={(e) => setVerifyPassword(e.target.value)}
+                  disabled={registerLoading}
+                />
+              </div>
+
+              {/* Button */}
+              <button
+                type="submit"
+                className="btn btn-dark w-100 rounded-0 mt-2"
+                disabled={registerLoading || !passwordsMatch}
+              >
+                {registerLoading ? 'Registering...' : 'Begin'}
+              </button>
+
+              {/* Links */}
+              <div
+                className="text-center mt-4"
+                style={{ fontSize: '0.85rem' }}
+              >
+                <Link to="/login" className="text-dark text-decoration-none">
+                  Login
+                </Link>
+                <span className="mx-2 text-muted">|</span>
+                <Link to="/MainPage" className="text-dark text-decoration-none">
+                  Back to Blog
+                </Link>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 // src/features/blog/blogSlice.ts
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { fetchArticles, createArticle, deleteArticle, } from './blogService'
+import { fetchArticles, createArticle, updateArticle, deleteArticle, } from './blogService'
 
 interface BlogContentState {
   articles: any[]
@@ -10,6 +10,9 @@ interface BlogContentState {
 
   insertArticleLoading: boolean
   insertArticleError: string | null
+
+  updateArticleLoadingById: Record<string, boolean>
+  updateArticleError: string | null
 
   deleteArticleLoadingById: Record<string, boolean>
   deleteArticleError: string | null
@@ -24,6 +27,9 @@ const initialState: BlogContentState = {
   insertArticleLoading: false,
   insertArticleError: null,
 
+  updateArticleLoadingById: {},
+  updateArticleError: null,
+
   deleteArticleLoadingById: {},
   deleteArticleError: null,
 }
@@ -34,12 +40,14 @@ export const fetchArticlesThunk = createAsyncThunk(
     search,
     limit,
     page,
+    only_mine
   }: {
     search?: string | null
     limit?: number
     page?: number
+    only_mine?: boolean
   }) => {
-    return fetchArticles(search || null, limit || 5, page || 1)
+    return fetchArticles(limit || 5, page || 1, search || null, only_mine || false)
   }
 )
 
@@ -57,13 +65,20 @@ export const deleteArticleThunk = createAsyncThunk(
   }
 )
 
+export const updateArticleThunk = createAsyncThunk< any, { id: string; title: string; content: string }>(
+  'blog/updateArticle',
+  async ({ id, title, content }) => {
+    return updateArticle(id, title, content)
+  }
+)
+
 const blogSlice = createSlice({
   name: 'blog',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // FETCH
+      // fetch
       .addCase(fetchArticlesThunk.pending, (state) => {
         state.contentLoading = true
       })
@@ -77,7 +92,7 @@ const blogSlice = createSlice({
         state.blogError = action.error.message || 'Fetch failed'
       })
 
-      // CREATE
+      // create
       .addCase(createArticleThunk.pending, (state) => {
         state.insertArticleLoading = true
       })
@@ -90,7 +105,27 @@ const blogSlice = createSlice({
           action.error.message || 'Create failed'
       })
 
-      // DELETE (PER ARTICLE)
+      // update
+      .addCase(updateArticleThunk.pending, (state, action) => {
+        state.updateArticleLoadingById[action.meta.arg.id] = true
+      })
+      .addCase(updateArticleThunk.fulfilled, (state, action) => {
+        const updated = action.payload
+        const index = state.articles.findIndex(a => a.id === updated.id)
+
+        if (index !== -1) {
+          state.articles[index] = updated
+        }
+
+        delete state.updateArticleLoadingById[updated.id]
+      })
+      .addCase(updateArticleThunk.rejected, (state, action) => {
+        delete state.updateArticleLoadingById[action.meta.arg.id]
+        state.updateArticleError =
+          action.error.message || 'Update failed'
+      })
+
+      // delete (PER ARTICLE)
       .addCase(deleteArticleThunk.pending, (state, action) => {
         state.deleteArticleLoadingById[action.meta.arg] = true
       })

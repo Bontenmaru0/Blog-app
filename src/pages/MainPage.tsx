@@ -1,45 +1,79 @@
 import { useEffect, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
-import { fetchArticlesThunk, deleteArticleThunk } from '../features/blog/blogSlice'
+import { fetchArticlesThunk, updateArticleThunk, deleteArticleThunk } from '../features/blog/blogSlice'
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
 import CreatePostCard from '../components/CreatePost'
-// import EditPostCard from '../components/EditPost'
+import EditPostCard from '../components/EditPost'
+
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
-  const { articles, total, contentLoading, blogError } = useAppSelector(
-    (state) => state.blog
-  )
-
+  const { articles, total, contentLoading, blogError } = useAppSelector((state) => state.blog)
+  
   const [searchTerm, setSearchTitle] = useState('')
-  const [page, setPage] = useState(1)
-  const [isCreating, setIsCreating] = useState(false)
-
+  
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
-
   const deleteLoadingById = useAppSelector(
     (state) => state.blog.deleteArticleLoadingById
   )
 
-  const limit = 5
   const dispatch = useAppDispatch()
 
+  const [page, setPage] = useState(1)
+  const limit = 5
   useEffect(() => {
     dispatch(fetchArticlesThunk({ search: searchTerm, limit, page }))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }, [dispatch, searchTerm, page])
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }, [page])
+  if (!user) {
+      setPage(1)
+    }
+  }, [user])
 
-  // ✅ ADDED: delete handler with toast
+
+  const [isCreating, setIsCreating] = useState(false)
+
+  const [editingArticleId, setEditingArticleId] = useState<string | null>(null)
+  const handleUpdate = async (
+    articleId: string,
+    data: { title: string; content: string }
+  ) => {
+    try {
+      await dispatch(
+        updateArticleThunk({
+          id: articleId,
+          ...data,
+        })
+      ).unwrap()
+
+      await dispatch(fetchArticlesThunk({ search: searchTerm, limit, page }))
+
+      window.showToast('Success', 'Article updated successfully.', 'success')
+      setEditingArticleId(null)
+    } catch (err: any) {
+      const message =
+        err?.message ||
+        err ||
+        'Failed to update article. Something went wrong.'
+
+      window.showToast('Error', message, 'error')
+    }
+  }
+
   const handleDelete = async (articleId: string) => {
     try {
       await dispatch(deleteArticleThunk(articleId)).unwrap()
       window.showToast('Deleted', 'Article deleted successfully.', 'success')
-    } catch {
-      window.showToast('Error', 'Failed to delete article. Something went wrong', 'error')
+    }  catch (err: any) {
+      const message =
+        err?.message ||
+        err ||
+        'Failed to delete article. Something went wrong.'
+
+      window.showToast('Error', message, 'error')
     } finally {
       setConfirmDeleteId(null)
     }
@@ -84,7 +118,7 @@ export default function MainPage() {
                   </h3>
                   {contentLoading && (
                     <span className="text-muted" style={{ fontSize: '0.85rem' }}>
-                      loading…
+                      loading contents…
                     </span>
                   )}
                 </div>
@@ -112,6 +146,8 @@ export default function MainPage() {
 
               {articles.map((article: any) => {
                 const isDeleting = !!deleteLoadingById[article.id]
+                const isEditing = editingArticleId === article.id
+
                 function timeAgo(dateString: string) {
                   const diff = Date.now() - new Date(dateString).getTime()
                   const mins = Math.floor(diff / 60000)
@@ -126,39 +162,64 @@ export default function MainPage() {
                 return (
                   <div key={article.id} className="card mb-3 rounded-0">
                     <div className="card-body position-relative">
-                      <h4>{article.title}</h4>
-                      <p>{article.content}</p>
-                      <small className="text-muted">
-                      Published by {article.author} • {timeAgo(article.created_at)}
-                      </small>
+                      {/* Show EditPostCard if this article is being edited */}
+                      {isEditing ? (
+                        <EditPostCard
+                          article={article}
+                          onCancel={() => setEditingArticleId(null)}
+                          onConfirmSave={(data) => handleUpdate(article.id, data)}
+                        />
+                      ) : (
+                        <>
+                          <h4>{article.title}</h4>
+                          <p>{article.content}</p>
+                          <small className="text-muted">
+                            Published by {article.author} • {timeAgo(article.created_at)}
+                          </small>
 
-                      {user && (
-                        <div className="position-absolute bottom-0 end-0 mb-2 me-2">
-                          {confirmDeleteId !== article.id ? (
-                            <button
-                              className="btn btn-link p-0 text-dark"
-                              onClick={() => setConfirmDeleteId(article.id)}
-                            >
-                              DELETE
-                            </button>
-                          ) : (
-                            <>
+                          {user && (
+                            <div className="position-absolute bottom-0 end-0 mb-2 me-2">
+                              {/* EDIT button */}
                               <button
-                                className="btn btn-link p-0 text-danger me-2"
-                                disabled={isDeleting}
-                                onClick={() => handleDelete(article.id)} // ✅ changed
+                                className="btn btn-link p-0 text-dark text-decoration-none"
+                                onClick={() => setEditingArticleId(article.id)}
                               >
-                                {isDeleting ? 'DELETING…' : 'YES'}
+                                EDIT
                               </button>
-                              <button
-                                className="btn btn-link p-0"
-                                onClick={() => setConfirmDeleteId(null)}
-                              >
-                                NO
-                              </button>
-                            </>
+
+                              <span className="mx-1">|</span>
+
+                              {/* DELETE button logic stays exactly the same */}
+                              {confirmDeleteId !== article.id ? (
+                                <button
+                                  className="btn btn-link p-0 text-dark text-decoration-none"
+                                  onClick={() => setConfirmDeleteId(article.id)}
+                                >
+                                  DELETE
+                                </button>
+                              ) : (
+                                <>
+                                  <button
+                                    className="btn btn-link p-0 text-success text-decoration-none"
+                                    disabled={isDeleting}
+                                    onClick={() => handleDelete(article.id)}
+                                  >
+                                    {isDeleting ? 'DELETING…' : 'YES'}
+                                  </button>
+
+                                  <span className="mx-1">-</span>
+
+                                  <button
+                                    className="btn btn-link text-secondary p-0 text-decoration-none"
+                                    onClick={() => setConfirmDeleteId(null)}
+                                  >
+                                    NO
+                                  </button>
+                                </>
+                              )}
+                            </div>
                           )}
-                        </div>
+                        </>
                       )}
                     </div>
                   </div>
@@ -188,7 +249,7 @@ export default function MainPage() {
                     return (
                       <>
                         <button
-                          className="btn btn-outline-dark"
+                          className="btn btn-outline-dark rounded-0"
                           disabled={page === 1}
                           onClick={() => setPage(1)}
                         >
@@ -196,7 +257,7 @@ export default function MainPage() {
                         </button>
 
                         <button
-                          className="btn btn-outline-dark"
+                          className="btn btn-outline-dark rounded-0"
                           disabled={page === 1}
                           onClick={() => setPage((p) => Math.max(1, p - 1))}
                         >
@@ -209,7 +270,7 @@ export default function MainPage() {
                             className={`btn ${
                               pNum === page
                                 ? 'btn-dark'
-                                : 'btn-outline-dark'
+                                : 'btn-outline-dark rounded-0'
                             }`}
                             onClick={() => setPage(pNum)}
                           >
@@ -218,7 +279,7 @@ export default function MainPage() {
                         ))}
 
                         <button
-                          className="btn btn-outline-dark"
+                          className="btn btn-outline-dark rounded-0"
                           disabled={page === totalPages}
                           onClick={() =>
                             setPage((p) => Math.min(totalPages, p + 1))
@@ -228,7 +289,7 @@ export default function MainPage() {
                         </button>
 
                         <button
-                          className="btn btn-outline-dark"
+                          className="btn btn-outline-dark rounded-0"
                           disabled={page === totalPages}
                           onClick={() => setPage(totalPages)}
                         >

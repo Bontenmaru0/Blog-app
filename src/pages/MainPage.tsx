@@ -84,7 +84,7 @@ export default function MainPage() {
       <Nav />
 
       <main className="flex-grow-1 container py-4">
-        <div className="d-flex justify-content-end p-3 bg-dark">
+        <div className="d-flex justify-content-end p-2 bg-dark">
           <div className="input-group rounded-0" style={{ maxWidth: '250px' }}>
             <input
               type="text"

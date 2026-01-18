@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import {  getSession, getUserInfo, registerUser, loginUser, logoutUser } from './authService'
+import {  getSession, getUserInfo, registerUser, loginUser, logoutUser, changePassword } from './authService'
 
 interface AuthState {
   user: any | null;
@@ -10,11 +10,13 @@ interface AuthState {
   registerLoading: boolean;
   logginLoading: boolean;
   logoutLoading: boolean;
+  changePasswordLoading: boolean;
 
   sessionError: string | null;
   loginError: string | null;
   registerError: string | null;
   logoutError: string | null;
+  changePasswordError: string | null
   
   sessionId?: string | null;
 }
@@ -28,10 +30,13 @@ const initialState: AuthState = {
   registerLoading: false,
   logginLoading: false,
   logoutLoading: false,
+  changePasswordLoading: false,
+
   sessionError: null,
   loginError: null,
   registerError: null,
-  logoutError: null
+  logoutError: null,
+  changePasswordError: null
 }
 
 export const checkSessionThunk = createAsyncThunk(
@@ -66,6 +71,13 @@ export const logoutThunk = createAsyncThunk(
   'auth/logout',
   async () => {
     await logoutUser();
+  }
+)
+
+export const changePasswordThunk = createAsyncThunk(
+  'auth/changePassword',
+  async ({ newPassword }: { newPassword: string }) => {
+    return await changePassword(newPassword)
   }
 )
 
@@ -141,6 +153,20 @@ const authSlice = createSlice({
       .addCase(logoutThunk.rejected, (state) => {
         state.logoutLoading = false;
         state.logoutError = 'Logout failed';
+      })
+
+      // change password cases
+      .addCase(changePasswordThunk.pending, (state) => {
+        state.changePasswordLoading = true
+        state.changePasswordError = null
+      })
+      .addCase(changePasswordThunk.fulfilled, (state) => {
+        state.changePasswordLoading = false
+      })
+      .addCase(changePasswordThunk.rejected, (state, action) => {
+        state.changePasswordLoading = false
+        state.changePasswordError =
+          action.error.message || 'Password change failed'
       })
     },
 })

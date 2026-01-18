@@ -32,21 +32,21 @@ export default function Nav() {
               {/* Visible only on md+ screens */}
               <div className="d-none d-md-flex align-items-center">
                 <span className="navbar-text" style={{ cursor: 'pointer' }}>
-                  <span className="no-select p-2" onClick={() => profileRef.current?.open()}>
-                    {fetchProfileLoading? 'Name Loading...' : fullName}
+                  <span className="no-select" onClick={() => profileRef.current?.open()}>
+                    {fetchProfileLoading? 'Name Loading...' : fullName.toUpperCase()}
                   </span> | {' '}
                   {loading ? (
                     <span>Logging out...</span>
                   ) : (
                     <a
                       href="#"
-                      className="text-decoration-none p-2"
+                      className="text-decoration-none"
                       onClick={(e) => {
                         e.preventDefault()
                         handleLogout()
                       }}
                     >
-                      Log out
+                      LOG OUT
                     </a>
                   )}
                 </span>
@@ -64,7 +64,7 @@ export default function Nav() {
           ) : (
             <div className="d-flex">
               <span className="navbar-text">
-                <Link className="text-decoration-none" to="/login">LOGIN</Link>{' '}
+                <Link className="text-decoration-none" to="/login">LOG IN</Link>{' '}
                 |{' '}
                 <Link className="text-decoration-none" to="/register">REGISTER</Link>
               </span>

@@ -1,6 +1,7 @@
-import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { logoutThunk } from '../features/auth/authSlice'
+import { changePasswordThunk } from '../features/auth/authSlice'
 
 export type ProfileOffcanvasHandle = {
   open: () => void
@@ -33,16 +34,38 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
     },
   }))
 
-  const { logoutLoading, logoutError } = useAppSelector((state) => state.auth)
+  const { logoutLoading, logoutError, changePasswordLoading, changePasswordError } = useAppSelector((state) => state.auth)
   const dispatch = useAppDispatch()
   const selfRef = ref as React.RefObject<ProfileOffcanvasHandle>
   const handleLogout = async () => {
     try {
+      if (!passwordsMatch) return
       await dispatch(logoutThunk()).unwrap()
       window.showToast('See you next time 👋', 'Logged out successfully.', 'success')
       selfRef?.current?.close()
     } catch (err) {
       window.showToast('Error', logoutError || 'Log out failed. Something went wrong', 'error')
+    }
+  }
+
+  const [ newPassword, setNewPassword ] = useState('')
+  const [ verifyPassword, setVerifyPassword] = useState('')
+  
+  const passwordsMatch =
+        newPassword.length > 0 &&
+        verifyPassword.length > 0 &&
+        newPassword === verifyPassword
+
+  const showPasswordError =
+        newPassword.length > 0 &&
+        verifyPassword.length > 0 &&
+        newPassword !== verifyPassword
+        const handleChangePassword = async () => {
+    try {
+      await dispatch(changePasswordThunk({newPassword})).unwrap()
+      window.showToast('Password changed.', 'Password changed succesfully.', 'success')
+    } catch (err) {
+      window.showToast('Error', changePasswordError || 'Changing password failed. Something went wrong.', 'error')
     }
   }
 
@@ -68,7 +91,7 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
       <div className="offcanvas-body d-flex flex-column">
         <h5 className="no-select">User Information Settings</h5>
         <form className="mt-2">
-          <input type="text" className="form-control rounded-0" placeholder="Profile Name"  defaultValue={fetchProfileLoading? 'Name Loading...' : fullName}/>
+          <input type="text" className="form-control rounded-0" placeholder="Profile Name"  defaultValue={fullName}/>
           <textarea className="form-control mt-2 rounded-0 bio-textarea" placeholder="Your bio, your rules..." rows={3} defaultValue={bio}></textarea>
           <button type="submit" className="btn btn-dark w-100 rounded-0 mt-3">
             Save Changes
@@ -77,14 +100,13 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
         <hr />
         <h5 className="no-select">Password Settings</h5>
         <form>
-          <input type="password" className="form-control rounded-0" placeholder="Old Password"/>
-          <input type="password" className="form-control mt-2 rounded-0" placeholder="New Password"/>
-          <input type="password" className="form-control mt-2 rounded-0" placeholder="Confirm New Password"/>
-          <button type="submit" className="btn btn-dark w-100 rounded-0 mt-3">
-            Change Password
+          {showPasswordError && ( <div className="text-center text-danger mb-3" style={{ fontSize: '0.85rem' }}> Passwords do not match </div> )}
+          <input type="password" className="form-control mt-2 rounded-0" placeholder="New Password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
+          <input type="password" className="form-control mt-2 rounded-0" placeholder="Confirm New Password" value={verifyPassword} onChange={(e) => setVerifyPassword(e.target.value)}/>
+          <button type="submit" className="btn btn-dark w-100 rounded-0 mt-3" disabled={changePasswordLoading || !passwordsMatch} onClick={handleChangePassword}>
+            {changePasswordLoading ? 'Changing Password...' : 'Change Password'}
           </button>
         </form>
-        <hr />
         <div className="mt-auto">
           <hr />
           {logoutLoading ? (
@@ -98,7 +120,7 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
                     handleLogout()
               }}
             >
-              Log out
+              {logoutLoading? 'LOGGING OUT...': 'LOG OUT'}
             </button>
           )}
           

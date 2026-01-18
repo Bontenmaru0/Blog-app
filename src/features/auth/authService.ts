@@ -35,3 +35,12 @@ export const logoutUser = async () => {
   const { error } = await supabase.auth.signOut()
   if (error) throw error;
 }
+
+export const changePassword = async (newPassword: string) => {
+  const { data, error } = await supabase.auth.updateUser({
+    password: newPassword,
+  })
+
+  if (error) throw error
+  return data.user
+}

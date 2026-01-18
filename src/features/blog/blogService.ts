@@ -2,18 +2,18 @@
 import { supabase } from '../../lib/supabase'
 
 export interface Article {
-  id: string
-  title: string
-  content: string
-  created_at: string
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
 }
 
 export interface FetchArticlesResponse {
-  data: Article[]
-  total: number
+  data: Article[];
+  total: number;
 }
-const { data: session } = await supabase.auth.getSession()
-console.log('SESSION UID:', session?.session?.user?.id)
+// const { data: session } = await supabase.auth.getSession()
+// console.log('SESSION UID:', session?.session?.user?.id)
 
 export const fetchArticles = async (
   limit: number = 5,
@@ -21,25 +21,25 @@ export const fetchArticles = async (
   search: string | null = null,
   only_mine = false
 ): Promise<FetchArticlesResponse> => {
-  const offset = (page - 1) * limit
+  const offset = (page - 1) * limit;
 
   const { data, error } = await supabase.rpc('get_articles', {
     p_limit: limit,
     p_offset: offset,
     p_search: search,
-    p_only_mine: only_mine // set to true to fetch only user's articles - for testing
+    p_only_mine: only_mine
   })
   // console.log('only_mine:', only_mine, typeof only_mine)
   // console.log('RPC raw data', data)
   // console.log('RPC error', error)
   if (error) {
-    throw error
+    throw error;
   }
 
   return {
     data: Array.isArray(data?.data) ? data.data : [],
     total: typeof data?.total === 'number' ? data.total : 0,
-  }
+  };
 }
 
 

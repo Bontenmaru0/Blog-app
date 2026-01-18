@@ -5,7 +5,8 @@ import Nav from '../components/Nav'
 import Footer from '../components/Footer'
 import CreatePostCard from '../components/CreatePost'
 import EditPostCard from '../components/EditPost'
-
+import { useNavigate } from 'react-router-dom'
+import { fetchProfileThunk } from '../features/profiles/profilesSlice'
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
@@ -19,6 +20,24 @@ export default function MainPage() {
   )
 
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!user) return
+
+    const checkProfile = async () => {
+      try {
+        const profileResult = await dispatch(fetchProfileThunk()).unwrap()
+        if (!profileResult) {
+          navigate('/profile', { replace: true }) // first-time user
+        }
+      } catch (err) {
+        navigate('/profile', { replace: true }) // no profile → redirect
+      }
+    }
+
+    checkProfile()
+  }, [user, dispatch, navigate])
 
   const [page, setPage] = useState(1)
   const limit = 5

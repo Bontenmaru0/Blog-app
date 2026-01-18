@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { registerThunk } from '../features/auth/authSlice'
+import { fetchProfileThunk } from '../features/profiles/profilesSlice'
 
 export default function Register() {
   const { registerLoading, registerError } = useAppSelector((state) => state.auth)
@@ -22,12 +23,24 @@ export default function Register() {
 
     
   const dispatch = useAppDispatch()
+  const navigate = useNavigate()
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!passwordsMatch) return
 
     try {
         await dispatch(registerThunk({ email, password })).unwrap()
+
+        if (registerLoading){
+          return
+        }
+
+        const profileResult = await dispatch(fetchProfileThunk()).unwrap();
+        if (!profileResult || profileResult.length === 0) {
+          navigate('/profile', { replace: true }); // first-time user
+        } else {
+          navigate('/', { replace: true }); // returning user
+        }
         window.showToast('Welcome aboard 👋', 'Registered successfully, we are logged you in.', 'success')
     } catch (err) {
         // ❌ error → do nothing here (UI already shows registerError)

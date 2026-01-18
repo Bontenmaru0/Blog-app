@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { logoutThunk } from '../features/auth/authSlice'
 import { useRef } from 'react'
-import UserProfile, { type ProfileOffcanvasHandle } from './EditUserProfile'
+import UserProfile, { type ProfileOffcanvasHandle } from './UserProfileOffcanvas'
 
 export default function Nav() {
-  const { user, loading } = useAppSelector((state) => state.auth)
+  const { user, loading, logoutError } = useAppSelector((state) => state.auth)
   const dispatch = useAppDispatch()
 
   const profileRef = useRef<ProfileOffcanvasHandle>(null)
@@ -15,7 +15,7 @@ export default function Nav() {
       await dispatch(logoutThunk()).unwrap()
       window.showToast('See you next time 👋', 'Logged out successfully.', 'success')
     } catch (err) {
-      window.showToast('Error', 'Logout failed', 'error')
+      window.showToast('Error', logoutError || 'Logout failed', 'error')
     }
   }
 
@@ -32,19 +32,19 @@ export default function Nav() {
                 <span className="navbar-text" style={{ cursor: 'pointer' }}>
                   <span className="no-select p-2" onClick={() => profileRef.current?.open()}>
                     {user.email}
-                  </span> |{' '}
+                  </span> | {' '}
                   {loading ? (
                     <span>Logging out...</span>
                   ) : (
                     <a
                       href="#"
-                      className="text-decoration-none"
+                      className="text-decoration-none p-2"
                       onClick={(e) => {
                         e.preventDefault()
                         handleLogout()
                       }}
                     >
-                      Logout
+                      Log out
                     </a>
                   )}
                 </span>

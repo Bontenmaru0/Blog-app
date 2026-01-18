@@ -1,4 +1,6 @@
 import { forwardRef, useImperativeHandle, useRef } from 'react'
+import { useAppDispatch, useAppSelector } from '../app/hooks'
+import { logoutThunk } from '../features/auth/authSlice'
 
 export type ProfileOffcanvasHandle = {
   open: () => void
@@ -26,6 +28,19 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
       bsOffcanvasRef.current?.hide()
     },
   }))
+
+  const { logoutLoading, logoutError } = useAppSelector((state) => state.auth)
+  const dispatch = useAppDispatch()
+  const selfRef = ref as React.RefObject<ProfileOffcanvasHandle>
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutThunk()).unwrap()
+      window.showToast('See you next time 👋', 'Logged out successfully.', 'success')
+      selfRef?.current?.close()
+    } catch (err) {
+      window.showToast('Error', logoutError || 'Log out failed. Something went wrong', 'error')
+    }
+  }
 
   return (
     <div
@@ -68,9 +83,21 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
         <hr />
         <div className="mt-auto">
           <hr />
-          <button className="btn btn-outline-dark w-100 rounded-0">
-            LOGOUT
-          </button>
+          {logoutLoading ? (
+            <button className="btn btn-outline-dark w-100 rounded-0">
+              Logging out...
+            </button>
+          ) : (
+            <button className="btn btn-outline-dark w-100 rounded-0"
+                    onClick={(e) => {
+                      e.preventDefault()
+                    handleLogout()
+              }}
+            >
+              Log out
+            </button>
+          )}
+          
         </div>
       </div>
       

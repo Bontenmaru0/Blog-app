@@ -5,7 +5,9 @@
 .no-select {
   user-select: none !important;
 }
-
+/**********************************************/
+/**********************************************/
+/* Chevron icon for collapsible sections */
 .chevron-xs {
   font-size: 0.6em;
   transition:
@@ -22,9 +24,17 @@ button[aria-expanded="false"] .chevron-xs {
 button[aria-expanded="true"] .chevron-xs {
   transform: rotate(90deg);
 }
-
+/**********************************************/
+/**********************************************/
+/* Textarea with dynamic height */
 .bio-textarea {
   height: 150px;      
   max-height: 300px; 
   resize: vertical;    /* allows vertical resizing only */
+}
+/**********************************************/
+/**********************************************/
+/* Pagination links with square corners */
+.pagination .page-link {
+  border-radius: 0 !important;
 }

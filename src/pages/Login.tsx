@@ -1,22 +1,36 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { loginThunk } from '../features/auth/authSlice'
+import { fetchProfileThunk } from '../features/profiles/profilesSlice'
 
 export default function Login() {
   const { logginLoading, loginError } = useAppSelector((state) => state.auth)
 
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [ email, setEmail ] = useState('');
+  const [ password, setPassword ] = useState('');
 
-  const dispatch = useAppDispatch()
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     try {
-        await dispatch(loginThunk({ email, password })).unwrap()
+      await dispatch(loginThunk({ email, password })).unwrap();
 
-      window.showToast('Welcome back', 'Login successfully!', 'success')
+      if (logginLoading){
+        return
+      }
+
+      const profileResult = await dispatch(fetchProfileThunk()).unwrap();
+
+      if (!profileResult || profileResult.length === 0) {
+        navigate('/profile', { replace: true }); // first-time user
+      } else {
+        navigate('/', { replace: true }); // returning user
+      }
+
+      window.showToast('Welcome back', 'Login successfully!', 'success');
     } catch (err) {
         // ❌ error → do nothing here (UI already shows loginError)
     }

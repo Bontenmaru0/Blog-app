@@ -3,19 +3,19 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { fetchArticles, createArticle, updateArticle, deleteArticle, } from './blogService'
 
 interface BlogContentState {
-  articles: any[]
-  total: number
-  contentLoading: boolean
-  blogError: string | null
+  articles: any[];
+  total: number;
+  contentLoading: boolean;
+  blogError: string | null;
 
-  insertArticleLoading: boolean
-  insertArticleError: string | null
+  insertArticleLoading: boolean;
+  insertArticleError: string | null;
 
-  updateArticleLoadingById: Record<string, boolean>
-  updateArticleError: string | null
+  updateArticleLoadingById: Record<string, boolean>;
+  updateArticleError: string | null;
 
-  deleteArticleLoadingById: Record<string, boolean>
-  deleteArticleError: string | null
+  deleteArticleLoadingById: Record<string, boolean>;
+  deleteArticleError: string | null;
 }
 
 const initialState: BlogContentState = {
@@ -47,7 +47,7 @@ export const fetchArticlesThunk = createAsyncThunk(
     page?: number
     only_mine?: boolean
   }) => {
-    return fetchArticles(limit || 5, page || 1, search || null, only_mine || false)
+    return fetchArticles(limit || 5, page || 1, search || null, only_mine || false);
   }
 )
 
@@ -61,14 +61,14 @@ export const createArticleThunk = createAsyncThunk(
 export const deleteArticleThunk = createAsyncThunk(
   'blog/deleteArticle',
   async (articleId: string) => {
-    return deleteArticle(articleId)
+    return deleteArticle(articleId);
   }
 )
 
 export const updateArticleThunk = createAsyncThunk< any, { id: string; title: string; content: string }>(
   'blog/updateArticle',
   async ({ id, title, content }) => {
-    return updateArticle(id, title, content)
+    return updateArticle(id, title, content);
   }
 )
 
@@ -80,67 +80,67 @@ const blogSlice = createSlice({
     builder
       // fetch
       .addCase(fetchArticlesThunk.pending, (state) => {
-        state.contentLoading = true
+        state.contentLoading = true;
       })
       .addCase(fetchArticlesThunk.fulfilled, (state, action) => {
-        state.contentLoading = false
-        state.articles = action.payload.data
-        state.total = action.payload.total
+        state.contentLoading = false;
+        state.articles = action.payload.data;
+        state.total = action.payload.total;
       })
       .addCase(fetchArticlesThunk.rejected, (state, action) => {
-        state.contentLoading = false
-        state.blogError = action.error.message || 'Fetch failed'
+        state.contentLoading = false;
+        state.blogError = action.error.message || 'Something went wrong.';
       })
 
       // create
       .addCase(createArticleThunk.pending, (state) => {
-        state.insertArticleLoading = true
+        state.insertArticleLoading = true;
       })
       .addCase(createArticleThunk.fulfilled, (state) => {
-        state.insertArticleLoading = false
+        state.insertArticleLoading = false;
       })
       .addCase(createArticleThunk.rejected, (state, action) => {
-        state.insertArticleLoading = false
+        state.insertArticleLoading = false;
         state.insertArticleError =
-          action.error.message || 'Create failed'
+          action.error.message || 'Create failed';
       })
 
-      // update
+      // update (per article)
       .addCase(updateArticleThunk.pending, (state, action) => {
-        state.updateArticleLoadingById[action.meta.arg.id] = true
+        state.updateArticleLoadingById[action.meta.arg.id] = true;
       })
       .addCase(updateArticleThunk.fulfilled, (state, action) => {
-        const updated = action.payload
-        const index = state.articles.findIndex(a => a.id === updated.id)
+        const updated = action.payload;
+        const index = state.articles.findIndex(a => a.id === updated.id);
 
         if (index !== -1) {
-          state.articles[index] = updated
+          state.articles[index] = updated;
         }
 
-        delete state.updateArticleLoadingById[updated.id]
+        delete state.updateArticleLoadingById[updated.id];
       })
       .addCase(updateArticleThunk.rejected, (state, action) => {
-        delete state.updateArticleLoadingById[action.meta.arg.id]
+        delete state.updateArticleLoadingById[action.meta.arg.id];
         state.updateArticleError =
-          action.error.message || 'Update failed'
+          action.error.message || 'Update failed';
       })
 
-      // delete (PER ARTICLE)
+      // delete (per article)
       .addCase(deleteArticleThunk.pending, (state, action) => {
-        state.deleteArticleLoadingById[action.meta.arg] = true
+        state.deleteArticleLoadingById[action.meta.arg] = true;
       })
       .addCase(deleteArticleThunk.fulfilled, (state, action) => {
-        delete state.deleteArticleLoadingById[action.meta.arg]
+        delete state.deleteArticleLoadingById[action.meta.arg];
         state.articles = state.articles.filter(
           (a) => a.id !== action.meta.arg
-        )
+        );
       })
       .addCase(deleteArticleThunk.rejected, (state, action) => {
-        delete state.deleteArticleLoadingById[action.meta.arg]
+        delete state.deleteArticleLoadingById[action.meta.arg];
         state.deleteArticleError =
-          action.error.message || 'Delete failed'
+          action.error.message || 'Delete failed';
       })
   },
 })
 
-export default blogSlice.reducer
+export default blogSlice.reducer;

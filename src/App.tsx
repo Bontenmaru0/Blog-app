@@ -9,36 +9,43 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import MainPage from './pages/MainPage'
 import UserProfile from './pages/CreateUserProfile';
+import { fetchProfileThunk } from './features/profiles/profilesSlice';
 
 function AppContent() {
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
+  const { profile } = useAppSelector((state) => state.profiles)
+
+  console.log(profile)
 
   useEffect(() => {
-    dispatch(checkSessionThunk())
+    dispatch(checkSessionThunk());
   }, [dispatch])
+
+  useEffect(() => {
+    if (user?.id) dispatch(fetchProfileThunk());
+  }, [dispatch, user?.id])
   
-
-
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<MainPage />} />
-        <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
-        <Route path="/profile" element={user ? <Navigate to="/" replace /> : <UserProfile />} />
-        <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </Router>
-  )
+    <Routes>
+      <Route path="/" element={<MainPage />} />
+      <Route path="/profile" element={user ? <UserProfile /> : <Navigate to="/login" replace />} />
+      <Route path="/login" element={user ? <Navigate to="/" replace /> : <Login />} />
+      <Route path="/register" element={user ? <Navigate to="/" replace /> : <Register />} />
+      <Route path="/profile" element={user ? <UserProfile /> : <Navigate to="/login" replace />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
 }
 
 function App() {
   return (
     <Provider store={store}>
-      <AppContent />
+      <Router>
+        <AppContent />
+      </Router>
     </Provider>
-  )
+  );
 }
 
 export default App

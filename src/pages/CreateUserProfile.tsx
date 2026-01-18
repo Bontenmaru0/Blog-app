@@ -1,33 +1,51 @@
-// import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-// import { useAppDispatch, useAppSelector } from '../app/hooks'
-// import { loginThunk } from '../features/auth/authSlice'
-import { useAppDispatch } from '../app/hooks'
+import { useAppDispatch, useAppSelector } from '../app/hooks'
+import { createProfileThunk, fetchProfileThunk } from '../features/profiles/profilesSlice'
 import { logoutThunk } from '../features/auth/authSlice'
 
-
-
 export default function UserProfile() {
-//   const { logginLoading, loginError } = useAppSelector((state) => state.auth)
+  const { createProfileLoading, createProfileError } = useAppSelector((state) => state.profiles)
+  const { user } = useAppSelector((state) => state.auth)
+  const id = user?.id
 
-//   const [email, setEmail] = useState('')
-//   const [password, setPassword] = useState('')
+  const [ full_name, setFullName] = useState('')
+  const [ bio, setBio] = useState('')
 
-//   const dispatch = useAppDispatch()
-//   const handleSubmit = async (e: React.FormEvent) => {
-//     e.preventDefault()
+  const dispatch = useAppDispatch()
+  const navigate = useNavigate()
 
-//     try {
-//         await dispatch(loginThunk({ email, password })).unwrap()
+  // ✅ On mount, fetch profile to prevent "glitch"
+  useEffect(() => {
+    if (!user) return
 
-//       window.showToast('Welcome back', 'Login successfully!', 'success')
-//     } catch (err) {
-//         // ❌ error → do nothing here (UI already shows loginError)
-//     }
-//   }
-const dispatch = useAppDispatch()
-const navigate = useNavigate()
-const handleLogout = async () => {
+    const checkProfile = async () => {
+      try {
+        const profileResult = await dispatch(fetchProfileThunk()).unwrap()
+        if (profileResult) {
+          navigate('/', { replace: true }) // already has profile → redirect
+        }
+      } catch (err) {
+        // profile doesn't exist yet → stay on create profile page
+      }
+    }
+
+    checkProfile()
+  }, [user, dispatch, navigate])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    try {
+      await dispatch(createProfileThunk({ id, full_name, bio })).unwrap()
+      window.showToast('Profile created!', 'You can start blogging now.', 'success')
+      navigate('/', { replace: true }) // redirect after successful creation
+    } catch (err) {
+      // ❌ error → already handled by slice
+    }
+  }
+
+  const handleLogout = async () => {
     try {
       await dispatch(logoutThunk()).unwrap()
       window.showToast('See you next time 👋', 'Logged out successfully.', 'success')
@@ -43,39 +61,30 @@ const handleLogout = async () => {
         <div className="row justify-content-center">
           <div className="col-md-5 col-lg-4">
             <form
-            //   onSubmit={handleSubmit}
+              onSubmit={handleSubmit}
               className="p-4 border border-dark"
               style={{ backgroundColor: '#fff' }}
             >
-              {/* Title */}
-              <h2 className="text-center mb-1 fw-normal">Modern Samurai</h2>
-              <p
-                className="text-center text-muted mb-4"
-                style={{ fontSize: '0.9rem' }}
-              >
+              <h2 className="text-center mb-1 fw-normal">Create Your Profile</h2>
+              <p className="text-center text-muted mb-4" style={{ fontSize: '0.9rem' }}>
                 Create your profile to start blogging.
               </p>
 
-              {/* Error */}
-              {/* {loginError && ( */}
-                <div
-                  className="text-center text-dark mb-3"
-                  style={{ fontSize: '0.85rem' }}
-                >
-                  {/* {loginError} */}
+              {createProfileError && (
+                <div className="text-center text-dark mb-3" style={{ fontSize: '0.85rem' }}>
+                  {createProfileError}
                 </div>
-              {/* )} */}
+              )}
 
-              {/* Email */}
               <div className="mb-3">
                 <input
                   required
                   type="text"
                   className="form-control border-dark rounded-0"
                   placeholder="Profile Name"
-                //   value={email}
-                //   onChange={(e) => setEmail(e.target.value)}
-                //   disabled={logginLoading}
+                  value={full_name}
+                  onChange={(e) => setFullName(e.target.value)}
+                  disabled={createProfileLoading}
                 />
               </div>
               <div className="mb-3">
@@ -84,36 +93,33 @@ const handleLogout = async () => {
                   className="form-control border-dark rounded-0 bio-textarea"
                   placeholder="Your bio, your rules..."
                   rows={3}
-                //   value={email}
-                //   onChange={(e) => setEmail(e.target.value)}
-                //   disabled={logginLoading}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  disabled={createProfileLoading}
                 />
               </div>
-              {/* Button */}
+
               <button
                 type="submit"
                 className="btn btn-dark w-100 rounded-0 mt-2"
-                // disabled={logginLoading}
+                disabled={createProfileLoading}
               >
-                {/* {logginLoading ? 'Entering...' : 'Enter'} */}
-                Create Profile
+                {createProfileLoading ? 'Creating Profile...' : 'Create Profile'}
               </button>
 
-              {/* Links */}
-              <div
-                className="text-center mt-4"
-                style={{ fontSize: '0.85rem' }}
-              >
+              <div className="text-center mt-4" style={{ fontSize: '0.85rem' }}>
                 <Link to="/register" className="text-dark text-decoration-none">
                   Create account
                 </Link>
                 <span className="mx-2 text-muted">|</span>
-                <Link to="/MainPage" 
-                      className="text-dark text-decoration-none"  
-                      onClick={(e) => {
-                        e.preventDefault()
-                        handleLogout()
-                      }}>
+                <Link
+                  to="/MainPage"
+                  className="text-dark text-decoration-none"
+                  onClick={(e) => {
+                    e.preventDefault()
+                    handleLogout()
+                  }}
+                >
                   Back to Blog
                 </Link>
               </div>

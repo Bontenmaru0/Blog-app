@@ -33,7 +33,7 @@ export default function Nav() {
               <div className="d-none d-md-flex align-items-center">
                 <span className="navbar-text" style={{ cursor: 'pointer' }}>
                   <span className="no-select" onClick={() => profileRef.current?.open()}>
-                    {fetchProfileLoading? 'Name Loading...' : fullName.toUpperCase()}
+                    {fetchProfileLoading? 'LOADING...' : fullName.toUpperCase()}
                   </span> | {' '}
                   {loading ? (
                     <span>Logging out...</span>

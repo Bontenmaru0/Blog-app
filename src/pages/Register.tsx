@@ -24,7 +24,7 @@ export default function Register() {
     
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submitRegister = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!passwordsMatch) return
 
@@ -53,7 +53,7 @@ export default function Register() {
         <div className="row justify-content-center">
           <div className="col-md-5 col-lg-4">
             <form
-              onSubmit={handleSubmit}
+              onSubmit={submitRegister}
               className="p-4 border border-dark"
               style={{ backgroundColor: '#fff' }}
             >

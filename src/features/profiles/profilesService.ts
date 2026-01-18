@@ -15,3 +15,11 @@ export const createProfile = async (id: string, full_name: string, bio: string) 
   }
   return data;
 }
+
+export const updateProfile = async (id: string, full_name: string, bio: string) => {
+  const { data, error } = await supabase.rpc('update_profile', { p_id: id, p_full_name: full_name, p_bio: bio });
+  if (error) {
+    throw error;
+  }
+  return data;
+}

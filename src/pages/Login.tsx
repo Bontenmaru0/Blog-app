@@ -12,7 +12,7 @@ export default function Login() {
 
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submitLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -42,7 +42,7 @@ export default function Login() {
         <div className="row justify-content-center">
           <div className="col-md-5 col-lg-4">
             <form
-              onSubmit={handleSubmit}
+              onSubmit={submitLogin}
               className="p-4 border border-dark"
               style={{ backgroundColor: '#fff' }}
             >

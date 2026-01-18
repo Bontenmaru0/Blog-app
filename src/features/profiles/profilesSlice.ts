@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { fetchProfile, createProfile } from './profilesService'
+import { fetchProfile, createProfile, updateProfile } from './profilesService'
 
 interface ProfilesState{
     profile: any | null
@@ -39,6 +39,13 @@ export const createProfileThunk = createAsyncThunk(
     'profiles/createUser',
     async({id, full_name, bio}:{id: string, full_name: string, bio: string}) => {
         return createProfile(id, full_name, bio)
+    }
+)
+
+export const updateProfileThunk = createAsyncThunk(
+    'profiles/updateUser',
+    async({id, full_name, bio}:{id: string, full_name: string, bio: string}) => {
+        return updateProfile(id, full_name, bio)
     }
 )
 

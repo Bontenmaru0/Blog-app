@@ -33,7 +33,7 @@ export default function UserProfile() {
     checkProfile()
   }, [user, dispatch, navigate])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const submitUserProfile = async (e: React.FormEvent) => {
     e.preventDefault()
 
     try {
@@ -61,7 +61,7 @@ export default function UserProfile() {
         <div className="row justify-content-center">
           <div className="col-md-5 col-lg-4">
             <form
-              onSubmit={handleSubmit}
+              onSubmit={submitUserProfile}
               className="p-4 border border-dark"
               style={{ backgroundColor: '#fff' }}
             >

@@ -39,8 +39,17 @@ export default function MainPage() {
     checkProfile()
   }, [user, dispatch, navigate])
 
+  const [isMobile, setIsMobile] = useState(false)
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 576) // Bootstrap sm
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [])
+
   const [page, setPage] = useState(1)
-  const limit = 5
+  const limit = isMobile ? 3 : 5
   useEffect(() => {
     dispatch(fetchArticlesThunk({ search: searchTerm, limit, page }))
     window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -103,8 +112,8 @@ export default function MainPage() {
       <Nav />
 
       <main className="flex-grow-1 container py-4">
-        <div className="d-flex justify-content-end p-2 bg-dark">
-          <div className="input-group rounded-0" style={{ maxWidth: '250px' }}>
+        <div className="d-flex justify-content-end p-1 bg-dark">
+          <div className="input-group rounded-0"> {/*style={{ maxWidth: '250px' }}*/}
             <input
               type="text"
               className="form-control rounded-0"

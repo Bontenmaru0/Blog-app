@@ -6,6 +6,8 @@ import UserProfile, { type ProfileOffcanvasHandle } from './UserProfileOffcanvas
 
 export default function Nav() {
   const { user, loading, logoutError } = useAppSelector((state) => state.auth)
+  const { profile, fetchProfileLoading } = useAppSelector((state) => state.profiles)
+  const fullName = profile?.full_name ?? ''
   const dispatch = useAppDispatch()
 
   const profileRef = useRef<ProfileOffcanvasHandle>(null)
@@ -31,7 +33,7 @@ export default function Nav() {
               <div className="d-none d-md-flex align-items-center">
                 <span className="navbar-text" style={{ cursor: 'pointer' }}>
                   <span className="no-select p-2" onClick={() => profileRef.current?.open()}>
-                    {user.email}
+                    {fetchProfileLoading? 'Name Loading...' : fullName}
                   </span> | {' '}
                   {loading ? (
                     <span>Logging out...</span>

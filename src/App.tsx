@@ -14,10 +14,7 @@ import { fetchProfileThunk } from './features/profiles/profilesSlice';
 function AppContent() {
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
-  const { profile } = useAppSelector((state) => state.profiles)
-
-  console.log(profile)
-
+  
   useEffect(() => {
     dispatch(checkSessionThunk());
   }, [dispatch])

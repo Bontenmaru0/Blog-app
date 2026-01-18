@@ -11,6 +11,10 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
   const offcanvasRef = useRef<HTMLDivElement | null>(null)
   const bsOffcanvasRef = useRef<any>(null)
 
+  const { profile, fetchProfileLoading } = useAppSelector((state) => state.profiles)
+  const fullName = profile?.full_name ?? ''
+  const bio = profile?.bio ?? ''
+
   useImperativeHandle(ref, () => ({
     open() {
       if (!offcanvasRef.current) return
@@ -52,7 +56,7 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
     >
       <div className="offcanvas-header">
         <h2 className="offcanvas-title" id="profileOffcanvasLabel">
-          Profile
+          {fetchProfileLoading? 'Name Loading...' : fullName}'s Profile
         </h2>
         <button
           type="button"
@@ -64,8 +68,8 @@ const ProfileOffcanvas = forwardRef<ProfileOffcanvasHandle>((_, ref) => {
       <div className="offcanvas-body d-flex flex-column">
         <h5 className="no-select">User Information Settings</h5>
         <form className="mt-2">
-          <input type="text" className="form-control rounded-0" placeholder="Profile Name"/>
-          <textarea className="form-control mt-2 rounded-0 bio-textarea" placeholder="Your bio, your rules..." rows={3}></textarea>
+          <input type="text" className="form-control rounded-0" placeholder="Profile Name"  defaultValue={fetchProfileLoading? 'Name Loading...' : fullName}/>
+          <textarea className="form-control mt-2 rounded-0 bio-textarea" placeholder="Your bio, your rules..." rows={3} defaultValue={bio}></textarea>
           <button type="submit" className="btn btn-dark w-100 rounded-0 mt-3">
             Save Changes
           </button>

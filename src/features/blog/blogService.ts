@@ -5,6 +5,7 @@ export interface Article {
   id: string;
   title: string;
   content: string;
+  images: string[];
   created_at: string;
 }
 
@@ -76,23 +77,97 @@ export const fetchArticles = async (
 //   }
 // }
 
-export const createArticle = async (title: string, content: string) => {
+export const createArticle = async (
+  title: string,
+  content: string,
+  files: File[] // uploaded images
+): Promise<Article> => {
+  const { data: sessionData, error: userError } = await supabase.auth.getUser();
+  if (userError) throw userError;
+  if (!sessionData?.user) throw new Error('User not logged in');
+
+  const userId = sessionData.user.id;
+
+  let uploadedUrls: string[] = [];
+
+  if (files && files.length > 0) {
+    for (const file of files) {
+      const filePath = `articles/${Date.now()}_${file.name}`;
+
+      const { data, error } = await supabase.storage
+        .from('article_images')
+        .upload(filePath, file);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('article_images')
+        .getPublicUrl(data.path);
+
+      uploadedUrls.push(urlData.publicUrl);
+    }
+  }
+
+  // Call the updated RPC with the current user ID
   const { data, error } = await supabase.rpc('insert_article', {
     p_title: title,
     p_content: content,
-  })
-  if (error) throw error
-  return data
-}
+    p_images: uploadedUrls,
+    p_user_id: userId
+  });
 
-export const updateArticle = async (articleId: string, title: string, content: string) => {
+  if (error) throw error;
+  return data[0];
+};
+
+export const updateArticle = async (
+  articleId: string,
+  title: string,
+  content: string,
+  files: File[],
+  removedImages: string[]
+) => {
+  /* new images */
+  const uploadedUrls: string[] = []
+
+  for (const file of files) {
+    const path = `articles/${articleId}/${crypto.randomUUID()}-${file.name}`
+
+    const { error: uploadError } = await supabase.storage
+      .from('article_images')
+      .upload(path, file)
+
+    if (uploadError) throw uploadError
+
+    const { data } = supabase.storage
+      .from('article_images')
+      .getPublicUrl(path)
+
+    uploadedUrls.push(data.publicUrl)
+  }
+
+  /* delete removed images */
+  if (removedImages.length > 0) {
+    await supabase.storage
+      .from('article_images')
+      .remove(
+        removedImages.map(url =>
+          url.split('/article_images/')[1]
+        )
+      )
+  }
+  
   const { error } = await supabase.rpc('update_article', {
     p_article_id: articleId,
     p_title: title,
-    p_content: content
+    p_content: content,
+    p_new_images: uploadedUrls,
+    p_removed_images: removedImages,
   })
+
   if (error) throw error
-  return articleId
+
+  return { id: articleId }
 }
 
 export const deleteArticle = async (articleId: string) => {

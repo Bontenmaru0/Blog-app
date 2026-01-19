@@ -15,7 +15,7 @@ export default function UserProfile() {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
-  // ✅ On mount, fetch profile to prevent "glitch"
+  // On mount/render, fetch profile to prevent "glitch"
   useEffect(() => {
     if (!user) return
 

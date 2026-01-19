@@ -3,10 +3,12 @@ import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { fetchArticlesThunk, updateArticleThunk, deleteArticleThunk } from '../features/blog/blogSlice'
 import Nav from '../components/Nav'
 import Footer from '../components/Footer'
-import CreatePostCard from '../components/CreatePost'
-import EditPostCard from '../components/EditPost'
+import CreatePostCard from '../components/CreatePostCard'
+import EditPostCard from '../components/EditPostCard'
 import { useNavigate } from 'react-router-dom'
 import { fetchProfileThunk } from '../features/profiles/profilesSlice'
+import ArticleImageGrid from '../components/Img/ArticleImageGrid'
+
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
@@ -67,13 +69,21 @@ export default function MainPage() {
   const [editingArticleId, setEditingArticleId] = useState<string | null>(null)
   const handleUpdate = async (
     articleId: string,
-    data: { title: string; content: string }
+    data: { 
+      title: string
+      content: string
+      files: File[]
+      removedImages: string[]
+    }
   ) => {
     try {
       await dispatch(
         updateArticleThunk({
           id: articleId,
-          ...data,
+          title: data.title,
+          content: data.content,
+          files: data.files,
+          removedImages: data.removedImages,
         })
       ).unwrap()
 
@@ -86,32 +96,40 @@ export default function MainPage() {
         err?.message ||
         err ||
         'Failed to update article. Something went wrong.'
-
+ 
       window.showToast('Error', message, 'error')
     }
   }
 
   const handleDelete = async (articleId: string) => {
-    try {
-      await dispatch(deleteArticleThunk(articleId)).unwrap()
-      window.showToast('Deleted', 'Article deleted successfully.', 'success')
-    }  catch (err: any) {
-      const message =
-        err?.message ||
-        err ||
-        'Failed to delete article. Something went wrong.'
+  try {
+    await dispatch(deleteArticleThunk(articleId)).unwrap()
+    window.showToast('Deleted', 'Article deleted successfully.', 'success')
 
-      window.showToast('Error', message, 'error')
-    } finally {
-      setConfirmDeleteId(null)
+    // after deletion, fetch articles for the current page
+    const resultAction = await dispatch(
+      fetchArticlesThunk({ search: searchTerm, limit, page })
+    ).unwrap()
+
+    // if the current page becomes empty and it's not the first page, go back one page
+    if (resultAction.data.length === 0 && page > 1) {
+      setPage(page - 1)
     }
+
+  } catch (err: any) {
+    const message =
+      err?.message || err || 'Failed to delete article. Something went wrong.'
+    window.showToast('Error', message, 'error')
+  } finally {
+    setConfirmDeleteId(null)
   }
+}
 
   return (
     <div className="d-flex flex-column min-vh-100">
       <Nav />
 
-      <main className="flex-grow-1 container py-4">
+      <main className="flex-grow-1 container py-4 col-12 col-lg-6 col-md-10" >
         <div className="d-flex justify-content-end p-1 bg-dark">
           <div className="input-group rounded-0"> {/*style={{ maxWidth: '250px' }}*/}
             <input
@@ -190,34 +208,45 @@ export default function MainPage() {
                 return (
                   <div key={article.id} className="card mb-3 rounded-0">
                     <div className="card-body position-relative">
-                      {/* Show EditPostCard if this article is being edited */}
                       {isEditing ? (
                         <EditPostCard
-                          article={article}
+                          article={{
+                            ...article,
+                            images: article.images ?? [], // ensure images is always an array
+                            title: article.title ?? '',
+                            content: article.content ?? '',
+                            author: article.full_name ?? article.author ?? 'Unknown',
+                          }}
                           onCancel={() => setEditingArticleId(null)}
                           onConfirmSave={(data) => handleUpdate(article.id, data)}
                         />
                       ) : (
-                        <>
-                          <h4>{article.title}</h4>
-                          <p>{article.content}</p>
-                          <small className="text-muted">
-                            Published by {article.author} • {timeAgo(article.created_at)}
+                        <div> {/* Stable wrapper to fix React internal error */}
+                          <h4>{article.title ?? 'Untitled'}</h4>
+                          <p>{article.content ?? ''}</p>
+
+                          <ArticleImageGrid
+                            images={(article.images ?? []).map((img: any) => ({
+                              image_url: img?.image_url ?? '',
+                            }))}
+                          />
+
+                          <small className="text-muted d-block mt-2 mb-2">
+                            Published by {article.full_name ?? article.author ?? 'Unknown'} •{' '}
+                            {article.created_at
+                              ? timeAgo(article.created_at)
+                              : 'Unknown date'}
                           </small>
 
-                          {user && (
-                            <div className="position-absolute bottom-0 end-0 mb-2 me-2">
-                              {/* EDIT button */}
+                          {user && article.author_id === user.id && (
+                            <div className="d-flex gap-2 mt-2 justify-content-end flex-wrap flex-sm-nowrap">
                               <button
                                 className="btn btn-link p-0 text-dark text-decoration-none"
                                 onClick={() => setEditingArticleId(article.id)}
                               >
                                 EDIT
                               </button>
-
                               <span className="mx-1">|</span>
-
-                              {/* DELETE button logic stays exactly the same */}
                               {confirmDeleteId !== article.id ? (
                                 <button
                                   className="btn btn-link p-0 text-dark text-decoration-none"
@@ -234,9 +263,7 @@ export default function MainPage() {
                                   >
                                     {isDeleting ? 'DELETING…' : 'YES'}
                                   </button>
-
                                   <span className="mx-1">-</span>
-
                                   <button
                                     className="btn btn-link text-secondary p-0 text-decoration-none"
                                     onClick={() => setConfirmDeleteId(null)}
@@ -247,7 +274,7 @@ export default function MainPage() {
                               )}
                             </div>
                           )}
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -258,15 +285,12 @@ export default function MainPage() {
                 <div className="d-flex justify-content-center mt-3 gap-2 flex-wrap">
                   {(() => {
                     const totalPages = Math.ceil(total / limit)
-                    const pageWindow = 5
-                    let startPage = Math.max(
-                      1,
-                      page - Math.floor(pageWindow / 2)
-                    )
-                    let endPage = Math.min(
-                      totalPages,
-                      startPage + pageWindow - 1
-                    )
+
+                    // dynamic window: 3 pages if width <= 800, otherwise 5
+                    const pageWindow = window.innerWidth <= 800 ? 3 : 5
+
+                    let startPage = Math.max(1, page - Math.floor(pageWindow / 2))
+                    let endPage = Math.min(totalPages, startPage + pageWindow - 1)
                     startPage = Math.max(1, endPage - pageWindow + 1)
 
                     const pages = Array.from(
@@ -295,10 +319,9 @@ export default function MainPage() {
                         {pages.map((pNum) => (
                           <button
                             key={pNum}
+                            style={{ borderRadius: 0 }}
                             className={`btn ${
-                              pNum === page
-                                ? 'btn-dark'
-                                : 'btn-outline-dark rounded-0'
+                              pNum === page ? 'btn-dark' : 'btn-outline-dark rounded-0'
                             }`}
                             onClick={() => setPage(pNum)}
                           >
@@ -309,9 +332,7 @@ export default function MainPage() {
                         <button
                           className="btn btn-outline-dark rounded-0"
                           disabled={page === totalPages}
-                          onClick={() =>
-                            setPage((p) => Math.min(totalPages, p + 1))
-                          }
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         >
                           &gt;
                         </button>

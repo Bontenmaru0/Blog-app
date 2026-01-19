@@ -37,9 +37,9 @@ const initialState: BlogContentState = {
 export const fetchArticlesThunk = createAsyncThunk(
   'blog/fetchArticles',
   async ({
-    search,
     limit,
     page,
+    search,
     only_mine
   }: {
     search?: string | null
@@ -53,8 +53,8 @@ export const fetchArticlesThunk = createAsyncThunk(
 
 export const createArticleThunk = createAsyncThunk(
   'blog/createArticle',
-  async ({ title, content }: { title: string; content: string }) => {
-    return createArticle(title, content)
+  async ({ title, content, images }: { title: string; content: string; images : File[]}) => {
+    return createArticle(title, content, images)
   }
 )
 
@@ -65,12 +65,22 @@ export const deleteArticleThunk = createAsyncThunk(
   }
 )
 
-export const updateArticleThunk = createAsyncThunk< any, { id: string; title: string; content: string }>(
+export const updateArticleThunk = createAsyncThunk<
+  any,
+  {
+    id: string
+    title: string
+    content: string
+    files: File[]
+    removedImages: string[]
+  }
+>(
   'blog/updateArticle',
-  async ({ id, title, content }) => {
-    return updateArticle(id, title, content);
+  async ({ id, title, content, files, removedImages }) => {
+    return updateArticle(id, title, content, files, removedImages)
   }
 )
+
 
 const blogSlice = createSlice({
   name: 'blog',

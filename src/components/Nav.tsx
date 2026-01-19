@@ -5,7 +5,7 @@ import { useRef } from 'react'
 import UserProfile, { type ProfileOffcanvasHandle } from './UserProfileOffcanvas'
 
 export default function Nav() {
-  const { user, loading, logoutError } = useAppSelector((state) => state.auth)
+  const { user, logoutError, logoutLoading } = useAppSelector((state) => state.auth)
   const { profile, fetchProfileLoading } = useAppSelector((state) => state.profiles)
   const fullName = profile?.full_name ?? ''
   const dispatch = useAppDispatch()
@@ -35,7 +35,7 @@ export default function Nav() {
                   <span className="no-select" onClick={() => profileRef.current?.open()}>
                     {fetchProfileLoading? 'LOADING...' : fullName.toUpperCase()}
                   </span> | {' '}
-                  {loading ? (
+                  {logoutLoading ? (
                     <span>Logging out...</span>
                   ) : (
                     <a

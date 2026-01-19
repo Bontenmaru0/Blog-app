@@ -7,7 +7,7 @@ import CreatePostCard from '../components/CreatePostCard'
 import EditPostCard from '../components/EditPostCard'
 import { useNavigate } from 'react-router-dom'
 import { fetchProfileThunk } from '../features/profiles/profilesSlice'
-import ArticleImageGrid from '../components/Img/ArticleImageGrid'
+import ArticleImageGrid from '../components/ArticleImageGrid'
 
 
 export default function MainPage() {

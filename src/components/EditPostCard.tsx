@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import ArticleImageGrid from './Img/ArticleImageGrid'
+import ArticleImageGrid from './ArticleImageGrid'
 
 /* ================= TYPES ================= */
 

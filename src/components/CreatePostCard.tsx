@@ -1,7 +1,7 @@
 import { useAppDispatch, useAppSelector } from '../app/hooks'
 import { createArticleThunk, fetchArticlesThunk } from '../features/blog/blogSlice'
 import { useState } from 'react'
-import ArticleImageGrid from './Img/ArticleImageGrid'
+import ArticleImageGrid from './ArticleImageGrid'
 
 interface Props {
   visible: boolean

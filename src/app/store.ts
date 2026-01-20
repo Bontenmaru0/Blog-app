@@ -1,13 +1,15 @@
 import { configureStore } from '@reduxjs/toolkit'
 import authReducer from '../features/auth/authSlice'
-import blogReducer from '../features/blog/blogSlice.ts'
-import profilesReducer from '../features/profiles/profilesSlice.ts'
+import blogReducer from '../features/blog/blogSlice'
+import profilesReducer from '../features/profiles/profilesSlice'
+import commentsReducer from '../features/comments/commentsSlice'
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     blog: blogReducer,
-    profiles: profilesReducer
+    profiles: profilesReducer,
+    comments: commentsReducer
   },
 })
 

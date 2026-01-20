@@ -65,7 +65,7 @@ const profilesSlice = createSlice({
             })
             .addCase(fetchProfileThunk.rejected, (state, action) => {
                 state.fetchProfileLoading = false;
-                state.fetchProfileError = action.error.message || 'Something went wrong.'
+                state.fetchProfileError = action.error.message || 'Profile fetch failed. Something went wrong.'
             })
             // create profile
             .addCase(createProfileThunk.pending, (state) => {
@@ -78,7 +78,7 @@ const profilesSlice = createSlice({
             })
             .addCase(createProfileThunk.rejected, (state, action) => {
                 state.createProfileLoading = false;
-                state.createProfileError = action.error.message || 'Failed to create profile';
+                state.createProfileError = action.error.message || 'Profile creation failed. Something went wrong.';
             });
     },
 });

@@ -58,13 +58,6 @@ export const createArticleThunk = createAsyncThunk(
   }
 )
 
-export const deleteArticleThunk = createAsyncThunk(
-  'blog/deleteArticle',
-  async (articleId: string) => {
-    return deleteArticle(articleId);
-  }
-)
-
 export const updateArticleThunk = createAsyncThunk<
   any,
   {
@@ -81,6 +74,12 @@ export const updateArticleThunk = createAsyncThunk<
   }
 )
 
+export const deleteArticleThunk = createAsyncThunk(
+  'blog/deleteArticle',
+  async (articleId: string) => {
+    return deleteArticle(articleId);
+  }
+)
 
 const blogSlice = createSlice({
   name: 'blog',
@@ -99,7 +98,7 @@ const blogSlice = createSlice({
       })
       .addCase(fetchArticlesThunk.rejected, (state, action) => {
         state.contentLoading = false;
-        state.blogError = action.error.message || 'Something went wrong.';
+        state.blogError = action.error.message || 'Failed to fetch data. Something went wrong.';
       })
 
       // create
@@ -112,7 +111,7 @@ const blogSlice = createSlice({
       .addCase(createArticleThunk.rejected, (state, action) => {
         state.insertArticleLoading = false;
         state.insertArticleError =
-          action.error.message || 'Create failed';
+          action.error.message || 'Creation failed. Something went wrong.';
       })
 
       // update (per article)
@@ -132,7 +131,7 @@ const blogSlice = createSlice({
       .addCase(updateArticleThunk.rejected, (state, action) => {
         delete state.updateArticleLoadingById[action.meta.arg.id];
         state.updateArticleError =
-          action.error.message || 'Update failed';
+          action.error.message || 'Update failed. Something went wrong.';
       })
 
       // delete (per article)
@@ -148,7 +147,7 @@ const blogSlice = createSlice({
       .addCase(deleteArticleThunk.rejected, (state, action) => {
         delete state.deleteArticleLoadingById[action.meta.arg];
         state.deleteArticleError =
-          action.error.message || 'Delete failed';
+          action.error.message || 'Delete failed. Something went wrong.';
       })
   },
 })

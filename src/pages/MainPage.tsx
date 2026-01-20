@@ -8,7 +8,7 @@ import EditPostCard from '../components/EditPostCard'
 import { useNavigate } from 'react-router-dom'
 import { fetchProfileThunk } from '../features/profiles/profilesSlice'
 import ArticleImageGrid from '../components/ArticleImageGrid'
-
+import ImageViewerModal from '../components/ArticleDetailsOnView/ImageViewerModal'
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
@@ -17,6 +17,12 @@ export default function MainPage() {
   const [searchTerm, setSearchTitle] = useState('')
   
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  const [selectedImage, setSelectedImage] = useState<{
+    imageUrl: string
+    article: any
+  } | null>(null)
+
   const deleteLoadingById = useAppSelector(
     (state) => state.blog.deleteArticleLoadingById
   )
@@ -124,7 +130,6 @@ export default function MainPage() {
     setConfirmDeleteId(null)
   }
 }
-
   return (
     <div className="d-flex flex-column min-vh-100">
       <Nav />
@@ -194,90 +199,84 @@ export default function MainPage() {
                 const isDeleting = !!deleteLoadingById[article.id]
                 const isEditing = editingArticleId === article.id
 
-                function timeAgo(dateString: string) {
-                  const diff = Date.now() - new Date(dateString).getTime()
-                  const mins = Math.floor(diff / 60000)
-                  if (mins < 1) return 'just now'
-                  if (mins < 60) return `${mins} minutes ago`
-                  const hours = Math.floor(mins / 60)
-                  if (hours < 24) return `${hours} hours ago`
-                  const days = Math.floor(hours / 24)
-                  return `${days} days ago`
-                }
-
                 return (
                   <div key={article.id} className="card mb-3 rounded-0">
-                    <div className="card-body position-relative">
-                      {isEditing ? (
-                        <EditPostCard
-                          article={{
-                            ...article,
-                            images: article.images ?? [], // ensure images is always an array
-                            title: article.title ?? '',
-                            content: article.content ?? '',
-                            author: article.full_name ?? article.author ?? 'Unknown',
-                          }}
-                          onCancel={() => setEditingArticleId(null)}
-                          onConfirmSave={(data) => handleUpdate(article.id, data)}
-                        />
-                      ) : (
-                        <div> {/* Stable wrapper to fix React internal error */}
-                          <h4>{article.title ?? 'Untitled'}</h4>
-                          <p>{article.content ?? ''}</p>
+  <div className="card-body position-relative">
+    {isEditing ? (
+      <EditPostCard
+        article={{
+          ...article,
+          images: article.images ?? [],
+          title: article.title ?? '',
+          content: article.content ?? '',
+          author: article.full_name ?? article.author ?? 'Unknown',
+        }}
+        onCancel={() => setEditingArticleId(null)}
+        onConfirmSave={(data) => handleUpdate(article.id, data)}
+      />
+    ) : (
+      <div>
+        <h4>{article.title ?? 'Untitled'}</h4>
+        <p>{article.content ?? ''}</p>
 
-                          <ArticleImageGrid
-                            images={(article.images ?? []).map((img: any) => ({
-                              image_url: img?.image_url ?? '',
-                            }))}
-                          />
+        <ArticleImageGrid
+          images={(article.images ?? []).map((img: any) => ({
+            image_url: img?.image_url ?? '',
+          }))}
+          onImageClick={(imageUrl: string) =>
+            setSelectedImage({ imageUrl, article })
+          }
+        />
 
-                          <small className="text-muted d-block mt-2 mb-2">
-                            Published by {article.full_name ?? article.author ?? 'Unknown'} •{' '}
-                            {article.created_at
-                              ? timeAgo(article.created_at)
-                              : 'Unknown date'}
-                          </small>
+        {/* ✅ Add comments here */}
+        {/* <ArticleComments articleId={article.id} /> */}
 
-                          {user && article.author_id === user.id && (
-                            <div className="d-flex gap-2 mt-2 justify-content-end flex-wrap flex-sm-nowrap">
-                              <button
-                                className="btn btn-link p-0 text-dark text-decoration-none"
-                                onClick={() => setEditingArticleId(article.id)}
-                              >
-                                EDIT
-                              </button>
-                              <span className="mx-1">|</span>
-                              {confirmDeleteId !== article.id ? (
-                                <button
-                                  className="btn btn-link p-0 text-dark text-decoration-none"
-                                  onClick={() => setConfirmDeleteId(article.id)}
-                                >
-                                  DELETE
-                                </button>
-                              ) : (
-                                <>
-                                  <button
-                                    className="btn btn-link p-0 text-success text-decoration-none"
-                                    disabled={isDeleting}
-                                    onClick={() => handleDelete(article.id)}
-                                  >
-                                    {isDeleting ? 'DELETING…' : 'YES'}
-                                  </button>
-                                  <span className="mx-1">-</span>
-                                  <button
-                                    className="btn btn-link text-secondary p-0 text-decoration-none"
-                                    onClick={() => setConfirmDeleteId(null)}
-                                  >
-                                    NO
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  </div>
+        <small className="text-muted d-block mt-2 mb-2">
+          Published by {article.full_name ?? article.author ?? 'Unknown'} •{' '}
+          {article.created_at ? timeAgo(article.created_at) : 'Unknown date'}
+        </small>
+
+        {user && article.author_id === user.id && (
+          <div className="d-flex gap-2 mt-2 justify-content-end flex-wrap flex-sm-nowrap">
+            <button
+              className="btn btn-link p-0 text-dark text-decoration-none"
+              onClick={() => setEditingArticleId(article.id)}
+            >
+              EDIT
+            </button>
+            <span className="mx-1">|</span>
+            {confirmDeleteId !== article.id ? (
+              <button
+                className="btn btn-link p-0 text-dark text-decoration-none"
+                onClick={() => setConfirmDeleteId(article.id)}
+              >
+                DELETE
+              </button>
+            ) : (
+              <>
+                <button
+                  className="btn btn-link p-0 text-success text-decoration-none"
+                  disabled={isDeleting}
+                  onClick={() => handleDelete(article.id)}
+                >
+                  {isDeleting ? 'DELETING…' : 'YES'}
+                </button>
+                <span className="mx-1">-</span>
+                <button
+                  className="btn btn-link text-secondary p-0 text-decoration-none"
+                  onClick={() => setConfirmDeleteId(null)}
+                >
+                  NO
+                </button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+</div>
+
                 )
               })}
 
@@ -341,7 +340,7 @@ export default function MainPage() {
                           className="btn btn-outline-dark rounded-0"
                           disabled={page === totalPages}
                           onClick={() => setPage(totalPages)}
-                        >
+                        > 
                           &gt;&gt;
                         </button>
                       </>
@@ -353,8 +352,22 @@ export default function MainPage() {
           </div>
         </div>
       </main>
-
+      {selectedImage && (
+        <ImageViewerModal imageUrl={selectedImage.imageUrl} article={selectedImage.article} onClose={() => setSelectedImage(null)} />
+      )}
       <Footer />
     </div>
   )
+
+  function timeAgo(dateString: string) {
+    const diff = Date.now() - new Date(dateString).getTime()
+    const mins = Math.floor(diff / 60000)
+    if (mins < 1) return 'just now'
+    if (mins < 60) return `${mins} minutes ago`
+    const hours = Math.floor(mins / 60)
+    if (hours < 24) return `${hours} hours ago`
+    const days = Math.floor(hours / 24)
+    return `${days} days ago`
+  }
 }
+

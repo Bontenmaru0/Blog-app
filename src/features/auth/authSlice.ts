@@ -98,7 +98,7 @@ const authSlice = createSlice({
       })
       .addCase(checkSessionThunk.rejected, (state, action) => {
         state.checkingSessionLoading = false;
-        state.sessionError = action.error.message || 'Session check failed';
+        state.sessionError = action.error.message || 'Session check failed. Something went wrong.';
       })
       // user info cases
       .addCase(userThunk.pending, (state) => {
@@ -111,7 +111,7 @@ const authSlice = createSlice({
       })
       .addCase(userThunk.rejected, (state, action) => {
         state.userInfoLoading = false;
-        state.sessionError = action.error.message || 'User info fetch failed';
+        state.sessionError = action.error.message || 'User info fetch failed. Something went wrong.';
       })
       //register cases
       .addCase(registerThunk.pending, (state) => {
@@ -125,7 +125,7 @@ const authSlice = createSlice({
       })
       .addCase(registerThunk.rejected, (state, action) => {
         state.registerLoading = false;
-        state.registerError = action.error.message || 'Registration failed';
+        state.registerError = action.error.message || 'Registration failed Something went wrong.';
       })
       // Login cases
       .addCase(loginThunk.pending, (state) => {
@@ -139,7 +139,7 @@ const authSlice = createSlice({
       })
       .addCase(loginThunk.rejected, (state, action) => {
         state.logginLoading = false;
-        state.loginError = action.error.message || 'Login failed';
+        state.loginError = action.error.message || 'Login failed. Something went wrong';
       })
       //logout cases
       .addCase(logoutThunk.pending, (state) => {
@@ -152,7 +152,7 @@ const authSlice = createSlice({
       })
       .addCase(logoutThunk.rejected, (state) => {
         state.logoutLoading = false;
-        state.logoutError = 'Logout failed';
+        state.logoutError = 'Logout failed. Something went wrong.';
       })
 
       // change password cases
@@ -166,7 +166,7 @@ const authSlice = createSlice({
       .addCase(changePasswordThunk.rejected, (state, action) => {
         state.changePasswordLoading = false
         state.changePasswordError =
-          action.error.message || 'Password change failed'
+          action.error.message || 'Password change failed. Something went wrong.'
       })
     },
 })

@@ -1,5 +1,6 @@
 import React from 'react'
 
+// Types
 export type GridImage = {
   image_url: string
 }
@@ -7,9 +8,11 @@ export type GridImage = {
 interface Props {
   images: GridImage[]
   onRemove?: (index: number) => void
+  onImageClick?: (imageUrl: string) => void
 }
 
-const ArticleImageGrid: React.FC<Props> = ({ images, onRemove }) => {
+// Main Component
+const ArticleImageGrid: React.FC<Props> = ({ images, onRemove, onImageClick }) => {
   const maxShow = 5
   const displayImages = images.slice(0, maxShow)
   const extraCount = images.length - maxShow
@@ -27,6 +30,7 @@ const ArticleImageGrid: React.FC<Props> = ({ images, onRemove }) => {
             index={idx}
             extraCount={idx === 1 ? extraCount : 0} // +N only top-right
             onRemove={onRemove}
+            onImageClick={onImageClick}
             aspect="4 / 3"
           />
         ))}
@@ -40,6 +44,7 @@ const ArticleImageGrid: React.FC<Props> = ({ images, onRemove }) => {
             img={img.image_url}
             index={idx + 2}
             onRemove={onRemove}
+            onImageClick={onImageClick}
             aspect="1 / 1"
           />
         ))}
@@ -50,13 +55,13 @@ const ArticleImageGrid: React.FC<Props> = ({ images, onRemove }) => {
 
 export default ArticleImageGrid
 
-// ==============================
-// Helper component
+// helper
 interface ImageBoxProps {
   img: string
   index: number
   aspect: string
   onRemove?: (index: number) => void
+  onImageClick?: (imageUrl: string) => void
   extraCount?: number
 }
 
@@ -65,22 +70,28 @@ const ImageBox: React.FC<ImageBoxProps> = ({
   index,
   aspect,
   onRemove,
-  extraCount = 0
+  onImageClick,
+  extraCount = 0,
 }) => {
   return (
     <div
-      className="position-relative article-img cursor-pointer"
+      className="position-relative article-img"
       style={{
         flex: 1,
         aspectRatio: aspect,
         overflow: 'hidden',
         borderRadius: 0,
+        cursor: onImageClick ? 'pointer' : 'default',
       }}
+      onClick={() => onImageClick?.(img)}
     >
-      {/* X remove button */}
+      {/* Remove Button */}
       {onRemove && (
         <span
-          onClick={() => onRemove(index)}
+          onClick={(e) => {
+            e.stopPropagation() // prevent triggering onImageClick
+            onRemove(index)
+          }}
           className="position-absolute top-0 end-0 me-2"
           style={{
             cursor: 'pointer',
@@ -90,13 +101,14 @@ const ImageBox: React.FC<ImageBoxProps> = ({
             zIndex: 5,
             transition: 'color 0.2s ease',
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = '#000000#6c757d')}
+          onMouseEnter={(e) => (e.currentTarget.style.color = '#000000')}
           onMouseLeave={(e) => (e.currentTarget.style.color = '#6c757d')}
         >
           ✕
         </span>
       )}
 
+      {/* Image */}
       <img
         src={img}
         className="w-100 h-100"
@@ -104,7 +116,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
         alt=""
       />
 
-      {/* Extra count overlay on top-right image only */}
+      {/* Extra count overlay */}
       {extraCount > 0 && (
         <div className="position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center bg-dark bg-opacity-75 text-white fs-3 fw-bold">
           +{extraCount}

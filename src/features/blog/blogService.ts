@@ -127,7 +127,7 @@ export const updateArticle = async (
   files: File[],
   removedImages: string[]
 ) => {
-  /* new images */
+  // new images
   const uploadedUrls: string[] = []
 
   for (const file of files) {
@@ -146,7 +146,7 @@ export const updateArticle = async (
     uploadedUrls.push(data.publicUrl)
   }
 
-  /* delete removed images */
+  // delete removed images
   if (removedImages.length > 0) {
     await supabase.storage
       .from('article_images')

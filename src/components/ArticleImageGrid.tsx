@@ -2,7 +2,7 @@ import React from 'react'
 
 // Types
 export type GridImage = {
-  id: string
+  id?: string
   image_url: string
   alt_text?: string | null
 }

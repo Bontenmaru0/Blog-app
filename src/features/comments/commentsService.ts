@@ -11,8 +11,6 @@ export interface Comment {
   created_at: string;
   updated_at: string;
   author_name: string;
-
-  // 👇 ADD THESE
   depth: number;
   reply_count: number;
   total_article_comments: number;
@@ -24,16 +22,28 @@ export interface FetchCommentsResponse {
   total: number;
 }
 
-export const fetchComments = async (
-  articleId: string,
-  imageId: string | null
+export const fetchArticleComments = async (
+  articleId: string
 ): Promise<Comment[]> => {
-  const { data, error } = await supabase.rpc("get_comments", {
+  const { data, error } = await supabase.rpc("get_article_comments", {
     p_article_id: articleId,
-    p_image_id: imageId,
   });
 
   if (error) throw error;
+  return data ?? [];
+};
+
+export const fetchImagesComments = async (
+  articleId: string,
+  imageId: string
+): Promise<Comment[]> => {
+  const { data, error } = await supabase.rpc("get_images_comments", {
+    p_article_id: articleId,
+    p_image_id: imageId
+  });
+
+  if (error) throw error;
+  console.log("fetchImagesComments data:", data);
   return data ?? [];
 };
 

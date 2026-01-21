@@ -6,7 +6,7 @@ interface Props {
   currentUserId?: string;
 }
 
-export default function CommentItem({ comment, currentUserId }: Props) {
+export default function ImageCommentItem({ comment, currentUserId }: Props) {
   const dispatch = useAppDispatch();
   const { deleteCommentLoading, deleteCommentError } = useAppSelector(
     (state) => state.comments

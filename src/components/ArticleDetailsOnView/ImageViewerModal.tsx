@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import CommentSection from './CommentSection'
+import CommentSection from './ImageCommentSection'
 import { useAppDispatch } from '../../app/hooks'
-import { fetchCommentsThunk } from '../../features/comments/commentsSlice'
+import { fetchImagesCommentsThunk } from '../../features/comments/commentsSlice'
 import type { GridImage } from '../ArticleImageGrid'
 
 interface Props {
@@ -28,7 +28,7 @@ export default function ImageViewerModal({
 
   useEffect(() => {
     if (!activeImage?.id) return
-    dispatch(fetchCommentsThunk({
+    dispatch(fetchImagesCommentsThunk({
       articleId: article.id,
       imageId: activeImage.id,
     }))
@@ -160,7 +160,7 @@ export default function ImageViewerModal({
                     <CommentSection
                       key={activeImage?.id}
                       articleId={article.id}
-                      imageId={activeImage?.id ?? null}
+                      imageId={activeImage?.id}
                     />
                   )}
                 </div>

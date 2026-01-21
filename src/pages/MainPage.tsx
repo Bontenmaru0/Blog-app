@@ -10,8 +10,7 @@ import { fetchProfileThunk } from '../features/profiles/profilesSlice'
 import ArticleImageGrid from '../components/ArticleImageGrid'
 import type { GridImage } from '../components/ArticleImageGrid'
 import ImageViewerModal from '../components/ArticleDetailsOnView/ImageViewerModal'
-import CommentSection from '../components/ArticleDetailsOnView/CommentSection'
-import { resetCommentsState } from '../features/comments/commentsSlice'
+import ArticleCommentSection from '../components/ArticleCommentSection'
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
@@ -239,7 +238,7 @@ export default function MainPage() {
                         </small>
 
                         {/* comments*/}
-                        <CommentSection 
+                        <ArticleCommentSection 
                           key={article.id}
                           articleId={article.id}
                         />
@@ -366,7 +365,6 @@ export default function MainPage() {
           article={selectedImage.article}
           onClose={() => {
             setSelectedImage(null);
-            dispatch(resetCommentsState());
           }}
         />
       )}

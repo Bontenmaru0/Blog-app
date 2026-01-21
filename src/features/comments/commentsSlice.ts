@@ -1,11 +1,5 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import {
-  fetchComments,
-  createComment,
-  updateComment,
-  deleteComment,
-  type Comment,
-} from "./commentsService";
+import { createAsyncThunk, createSlice, createAction } from "@reduxjs/toolkit";
+import { fetchComments, createComment, updateComment, deleteComment, type Comment, } from "./commentsService";
 
 interface CommentState {
   comments: Comment[];
@@ -88,6 +82,8 @@ export const deleteCommentThunk = createAsyncThunk(
   }
 );
 
+export const resetCommentsState = createAction('comments/resetState');
+
 const commentsSlice = createSlice({
   name: "comments",
   initialState,
@@ -114,6 +110,11 @@ const commentsSlice = createSlice({
         state.contentError =
           action.error.message ??
           "Failed to fetch comments. Something went wrong.";
+      })
+      .addCase(resetCommentsState, (state) => {
+        state.comments = [];
+        state.total = 0;
+        state.contentLoading = false;
       })
 
       // CREATE

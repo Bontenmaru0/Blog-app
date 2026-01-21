@@ -2,13 +2,15 @@ import React from 'react'
 
 // Types
 export type GridImage = {
+  id: string
   image_url: string
+  alt_text?: string | null
 }
 
 interface Props {
   images: GridImage[]
   onRemove?: (index: number) => void
-  onImageClick?: (imageUrl: string) => void
+  onImageClick?: (image: GridImage, index: number) => void
 }
 
 // Main Component
@@ -25,10 +27,10 @@ const ArticleImageGrid: React.FC<Props> = ({ images, onRemove, onImageClick }) =
       <div className="d-flex gap-2 mb-2">
         {displayImages.slice(0, 2).map((img, idx) => (
           <ImageBox
-            key={idx}
-            img={img.image_url}
+            key={img.id}               // ✅ STABLE KEY
+            img={img}                // ✅ PASS OBJECT
             index={idx}
-            extraCount={idx === 1 ? extraCount : 0} // +N only top-right
+            extraCount={idx === 1 ? extraCount : 0}
             onRemove={onRemove}
             onImageClick={onImageClick}
             aspect="4 / 3"
@@ -40,12 +42,12 @@ const ArticleImageGrid: React.FC<Props> = ({ images, onRemove, onImageClick }) =
       <div className="d-flex gap-2">
         {displayImages.slice(2, 5).map((img, idx) => (
           <ImageBox
-            key={idx + 2}
-            img={img.image_url}
+            key={img.id}               // ✅ STABLE KEY
+            img={img}
             index={idx + 2}
             onRemove={onRemove}
             onImageClick={onImageClick}
-            aspect="1 / 1"
+            aspect="4 / 3"
           />
         ))}
       </div>
@@ -53,15 +55,16 @@ const ArticleImageGrid: React.FC<Props> = ({ images, onRemove, onImageClick }) =
   )
 }
 
+
 export default ArticleImageGrid
 
 // helper
 interface ImageBoxProps {
-  img: string
+  img: GridImage
   index: number
   aspect: string
   onRemove?: (index: number) => void
-  onImageClick?: (imageUrl: string) => void
+  onImageClick?: (image: GridImage, index: number) => void
   extraCount?: number
 }
 
@@ -83,7 +86,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
         borderRadius: 0,
         cursor: onImageClick ? 'pointer' : 'default',
       }}
-      onClick={() => onImageClick?.(img)}
+      onClick={() => onImageClick?.(img, index)} // ✅ CORRECT
     >
       {/* Remove Button */}
       {onRemove && (
@@ -110,7 +113,7 @@ const ImageBox: React.FC<ImageBoxProps> = ({
 
       {/* Image */}
       <img
-        src={img}
+        src={img.image_url}
         className="w-100 h-100"
         style={{ objectFit: 'cover' }}
         alt=""

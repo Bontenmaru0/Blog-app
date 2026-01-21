@@ -8,7 +8,10 @@ import EditPostCard from '../components/EditPostCard'
 import { useNavigate } from 'react-router-dom'
 import { fetchProfileThunk } from '../features/profiles/profilesSlice'
 import ArticleImageGrid from '../components/ArticleImageGrid'
+import type { GridImage } from '../components/ArticleImageGrid'
 import ImageViewerModal from '../components/ArticleDetailsOnView/ImageViewerModal'
+import CommentSection from '../components/ArticleDetailsOnView/CommentSection'
+import { resetCommentsState } from '../features/comments/commentsSlice'
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
@@ -19,7 +22,8 @@ export default function MainPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const [selectedImage, setSelectedImage] = useState<{
-    imageUrl: string
+    image: GridImage
+    index: number
     article: any
   } | null>(null)
 
@@ -32,7 +36,7 @@ export default function MainPage() {
 
   useEffect(() => {
     if (!user) return
-
+ 
     const checkProfile = async () => {
       try {
         const profileResult = await dispatch(fetchProfileThunk()).unwrap()
@@ -50,7 +54,7 @@ export default function MainPage() {
   const [isMobile, setIsMobile] = useState(false)
 
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 576) // Bootstrap sm
+    const checkMobile = () => setIsMobile(window.innerWidth < 800)
     checkMobile()
     window.addEventListener('resize', checkMobile)
     return () => window.removeEventListener('resize', checkMobile)
@@ -68,7 +72,6 @@ export default function MainPage() {
       setPage(1)
     }
   }, [user])
-
 
   const [isCreating, setIsCreating] = useState(false)
 
@@ -201,82 +204,86 @@ export default function MainPage() {
 
                 return (
                   <div key={article.id} className="card mb-3 rounded-0">
-  <div className="card-body position-relative">
-    {isEditing ? (
-      <EditPostCard
-        article={{
-          ...article,
-          images: article.images ?? [],
-          title: article.title ?? '',
-          content: article.content ?? '',
-          author: article.full_name ?? article.author ?? 'Unknown',
-        }}
-        onCancel={() => setEditingArticleId(null)}
-        onConfirmSave={(data) => handleUpdate(article.id, data)}
-      />
-    ) : (
-      <div>
-        <h4>{article.title ?? 'Untitled'}</h4>
-        <p>{article.content ?? ''}</p>
+                    <div className="card-body position-relative">
+                      {isEditing ? (
+                        <EditPostCard
+                          article={{
+                            ...article,
+                            images: article.images ?? [],
+                            title: article.title ?? '',
+                            content: article.content ?? '',
+                            author: article.full_name ?? article.author ?? 'Unknown',
+                          }}
+                          onCancel={() => setEditingArticleId(null)}
+                          onConfirmSave={(data) => handleUpdate(article.id, data)}
+                        />
+                      ) : (
+                      <div>
+                        <h4>{article.title ?? 'Untitled'}</h4>
+                        <p>{article.content ?? ''}</p>
 
-        <ArticleImageGrid
-          images={(article.images ?? []).map((img: any) => ({
-            image_url: img?.image_url ?? '',
-          }))}
-          onImageClick={(imageUrl: string) =>
-            setSelectedImage({ imageUrl, article })
-          }
-        />
+                        {/* Images*/}
+                        <ArticleImageGrid
+                          images={article.images ?? []}
+                          onImageClick={(img, index) =>
+                            setSelectedImage({
+                              image: img,
+                              index,
+                              article,
+                            })
+                          }
+                        />
+                        <small className="text-muted d-block mt-2 mb-2">
+                          Published by {article.full_name ?? article.author ?? 'Unknown'} •{' '}
+                          {article.created_at ? timeAgo(article.created_at) : 'Unknown date'}
+                        </small>
 
-        {/* ✅ Add comments here */}
-        {/* <ArticleComments articleId={article.id} /> */}
+                        {/* comments*/}
+                        <CommentSection 
+                          key={article.id}
+                          articleId={article.id}
+                        />
 
-        <small className="text-muted d-block mt-2 mb-2">
-          Published by {article.full_name ?? article.author ?? 'Unknown'} •{' '}
-          {article.created_at ? timeAgo(article.created_at) : 'Unknown date'}
-        </small>
-
-        {user && article.author_id === user.id && (
-          <div className="d-flex gap-2 mt-2 justify-content-end flex-wrap flex-sm-nowrap">
-            <button
-              className="btn btn-link p-0 text-dark text-decoration-none"
-              onClick={() => setEditingArticleId(article.id)}
-            >
-              EDIT
-            </button>
-            <span className="mx-1">|</span>
-            {confirmDeleteId !== article.id ? (
-              <button
-                className="btn btn-link p-0 text-dark text-decoration-none"
-                onClick={() => setConfirmDeleteId(article.id)}
-              >
-                DELETE
-              </button>
-            ) : (
-              <>
-                <button
-                  className="btn btn-link p-0 text-success text-decoration-none"
-                  disabled={isDeleting}
-                  onClick={() => handleDelete(article.id)}
-                >
-                  {isDeleting ? 'DELETING…' : 'YES'}
-                </button>
-                <span className="mx-1">-</span>
-                <button
-                  className="btn btn-link text-secondary p-0 text-decoration-none"
-                  onClick={() => setConfirmDeleteId(null)}
-                >
-                  NO
-                </button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
-    )}
-  </div>
-</div>
-
+                        {user && article.author_id === user.id && (
+                          <div className="d-flex gap-2 mt-2 justify-content-end flex-wrap flex-sm-nowrap">
+                            <button
+                              className="btn btn-link p-0 text-dark text-decoration-none"
+                              onClick={() => setEditingArticleId(article.id)}
+                            >
+                              EDIT
+                            </button>
+                            <span className="mx-1">|</span>
+                            {confirmDeleteId !== article.id ? (
+                              <button
+                                className="btn btn-link p-0 text-dark text-decoration-none"
+                                onClick={() => setConfirmDeleteId(article.id)}
+                              >
+                                DELETE
+                              </button>
+                            ) : (
+                              <>
+                                <button
+                                  className="btn btn-link p-0 text-success text-decoration-none"
+                                  disabled={isDeleting}
+                                  onClick={() => handleDelete(article.id)}
+                                >
+                                  {isDeleting ? 'DELETING…' : 'YES'}
+                                </button>
+                                <span className="mx-1">-</span>
+                                <button
+                                  className="btn btn-link text-secondary p-0 text-decoration-none"
+                                  onClick={() => setConfirmDeleteId(null)}
+                                >
+                                  NO
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
                 )
               })}
 
@@ -353,7 +360,15 @@ export default function MainPage() {
         </div>
       </main>
       {selectedImage && (
-        <ImageViewerModal imageUrl={selectedImage.imageUrl} article={selectedImage.article} onClose={() => setSelectedImage(null)} />
+        <ImageViewerModal
+          images={selectedImage.article.images}
+          startIndex={selectedImage.index}
+          article={selectedImage.article}
+          onClose={() => {
+            setSelectedImage(null);
+            dispatch(resetCommentsState());
+          }}
+        />
       )}
       <Footer />
     </div>

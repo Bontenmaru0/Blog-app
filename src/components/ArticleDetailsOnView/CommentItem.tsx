@@ -12,18 +12,10 @@ export default function CommentItem({ comment, currentUserId }: Props) {
     (state) => state.comments
   );
 
+  console.log(comment)
+
   const isOwner = comment.user_id === currentUserId;
 
-  // const handleUpdate = async () => {
-  //   try {
-  //     await dispatch(
-  //       deleteCommentThunk({ commentId: comment.id })
-  //     ).unwrap();
-  //     window.showToast('Success', 'Comment deleted successfully', 'success')
-  //   } catch (err: any) {
-  //     window.showToast('Error', deleteCommentError ||'Failed to delete comment. Something went wrong.', 'error')
-  //   }
-  // };
 
   const handleDelete = async () => {
     try {

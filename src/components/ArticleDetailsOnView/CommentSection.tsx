@@ -17,10 +17,9 @@ export default function CommentSection({ articleId, imageId = null }: Props) {
   const [text, setText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
-  // Fetch comments whenever articleId or imageId changes
   useEffect(() => {
-    if (!articleId || !imageId) return
-    dispatch(fetchCommentsThunk({ articleId, imageId }))
+    if (!articleId) return
+    dispatch(fetchCommentsThunk({ articleId, imageId: imageId || null }))
   }, [articleId, imageId, dispatch])
 
   // Clear the textarea when switching images
@@ -35,16 +34,16 @@ export default function CommentSection({ articleId, imageId = null }: Props) {
   }
 
   const handlePost = async () => {
-    if (!imageId) return
+    if (!text.trim()) return; // must have content
     const payload = {
       articleId,
-      imageId,
+      imageId: imageId || null, // null for article-level
       parentId: null,
       content: text,
     }
     try {
       await dispatch(createCommentThunk(payload)).unwrap()
-      dispatch(fetchCommentsThunk({ articleId, imageId })) // refresh after posting
+      dispatch(fetchCommentsThunk({ articleId, imageId: imageId || null })) // refresh
       setText('')
       window.showToast('Success', 'Comment sent successfully!', 'success')
     } catch (err) {
@@ -82,7 +81,7 @@ export default function CommentSection({ articleId, imageId = null }: Props) {
           className="btn btn-dark btn-sm position-absolute bottom-0 end-0 m-1 rounded-0"
           style={{ zIndex: 10 }}
           onClick={handlePost}
-          disabled={insertCommentLoading}
+          disabled={insertCommentLoading || !text.trim()}
         >
           <i className="bi bi-send"></i> {insertCommentLoading ? 'Sending...' : 'Send'}
         </button>

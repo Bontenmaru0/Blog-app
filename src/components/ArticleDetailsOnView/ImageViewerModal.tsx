@@ -2,37 +2,53 @@ import { useState, useEffect } from 'react'
 import CommentSection from './CommentSection'
 import { useAppDispatch } from '../../app/hooks'
 import { fetchCommentsThunk } from '../../features/comments/commentsSlice'
+import type { GridImage } from '../ArticleImageGrid'
 
 interface Props {
-  imageUrl: string
+  images: GridImage[]
+  startIndex: number
   article: any
   onClose: () => void
 }
 
-export default function ImageViewerModal({ imageUrl, article, onClose }: Props) {
+export default function ImageViewerModal({
+  images,
+  startIndex,
+  article,
+  onClose,
+}: Props) {
   const dispatch = useAppDispatch()
-  const images = article?.images ?? []
 
-  // ACTIVE IMAGE INDEX
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [activeIndex, setActiveIndex] = useState(startIndex)
   const activeImage = images[activeIndex] ?? null
 
-  // Rehydrate activeIndex AFTER images load (refresh-safe)
   useEffect(() => {
-    if (!images.length) return
-    const index = images.findIndex((img: any) => img.image_url === imageUrl)
-    setActiveIndex(index >= 0 ? index : 0)
-  }, [imageUrl, images])
+    setActiveIndex(startIndex)
+  }, [startIndex])
 
-  // Fetch comments whenever activeImage changes
   useEffect(() => {
     if (!activeImage?.id) return
-    dispatch(fetchCommentsThunk({ articleId: article.id, imageId: activeImage.id }))
+    dispatch(fetchCommentsThunk({
+      articleId: article.id,
+      imageId: activeImage.id,
+    }))
   }, [activeImage?.id, article.id, dispatch])
 
-  // CAROUSEL NAVIGATION
-  const handlePrev = () => setActiveIndex(prev => (prev === 0 ? images.length - 1 : prev - 1))
-  const handleNext = () => setActiveIndex(prev => (prev === images.length - 1 ? 0 : prev + 1))
+  const handlePrev = () => {
+    setActiveIndex(i => {
+      const next = i === 0 ? images.length - 1 : i - 1
+      // console.log('⬅️ Prev image index:', next)
+      return next
+    })
+  }
+
+  const handleNext = () => {
+    setActiveIndex(i => {
+      const next = i === images.length - 1 ? 0 : i + 1
+      // console.log('➡️ Next image index:', next)
+      return next
+    })
+  }
 
   // Keyboard navigation
   useEffect(() => {
@@ -45,6 +61,22 @@ export default function ImageViewerModal({ imageUrl, article, onClose }: Props) 
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [images.length, onClose])
+
+  // useEffect(() => {
+  //   console.log('🖼️ Modal opened with image:', images[startIndex])
+  //   console.log('🧭 startIndex:', startIndex)
+  // }, [startIndex, images])
+
+
+  // useEffect(() => {
+  //   if (!activeImage) return
+
+  //   console.log('📸 Active image changed:', {
+  //     index: activeIndex,
+  //     id: activeImage.id,
+  //     url: activeImage.image_url,
+  //   })
+  // }, [activeImage, activeIndex])
 
   return (
     <div
@@ -124,10 +156,9 @@ export default function ImageViewerModal({ imageUrl, article, onClose }: Props) 
                 <h5 className="mb-1">{article.title}</h5>
                 <div className="flex-grow-1 overflow-auto">
                   <p>{article.content}</p>
-                  {console.log(activeImage)}
                   {activeImage?.id && (
                     <CommentSection
-                      key={activeImage?.id} // 🔑 force remount
+                      key={activeImage?.id}
                       articleId={article.id}
                       imageId={activeImage?.id ?? null}
                     />

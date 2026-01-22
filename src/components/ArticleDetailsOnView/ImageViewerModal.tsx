@@ -20,6 +20,9 @@ export default function ImageViewerModal({
 }: Props) {
   const dispatch = useAppDispatch()
   const { user } = useAppSelector((state) => state.auth)
+
+  const [isComment, setIsComment] = useState(false)
+  
   const { insertCommentLoading, insertCommentError } = useAppSelector((state) => state.comments)
 
   const [activeIndex, setActiveIndex] = useState(startIndex)
@@ -117,7 +120,9 @@ export default function ImageViewerModal({
             <div className="row g-0 h-100">
 
               {/* LEFT: IMAGE CAROUSEL */}
-              <div className="col-md-9 bg-dark position-relative">
+              <div 
+                className={`col-md-9 bg-dark position-relative ${isComment?'d-none':''}`}
+              >
                 <div
                   style={{
                     position: 'absolute',
@@ -132,6 +137,23 @@ export default function ImageViewerModal({
                 >
                   Modern Samurai x {article.full_name ?? article.author}
                 </div>
+
+                {!isComment && (
+                  <div
+                    className="position-absolute start-50 bottom-0 translate-middle-x text-center w-100 d-md-none"
+                    onClick={() => setIsComment(true)}
+                    style={{
+                      backgroundColor: 'rgba(0,0,0,0.6)',
+                      color: 'white',
+                      padding: '0.3rem 0.6rem',
+                      fontSize: '0.85rem',
+                      zIndex: 10,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    See comments
+                  </div>
+                )}
 
                 {activeImage ? (
                   <>
@@ -174,9 +196,24 @@ export default function ImageViewerModal({
               </div>
 
               {/* RIGHT: ARTICLE + COMMENTS */}
-              <div className="col-md-3 d-flex flex-column p-3" style={{ height: '100%' }}>
-                <h5 className="mb-1">{article.title}</h5>
-                
+              <div className={`col-md-3 d-flex flex-column p-3  ${isComment?'':'d-none d-md-block'}`} style={{ height: '100%' }}>
+                {isComment && (
+                  <div
+                    className="position-absolute top-0 start-50 translate-middle-x text-center w-100 d-md-none"
+                    onClick={() => setIsComment(false)}
+                    style={{
+                      backgroundColor: 'rgba(0, 0, 0, .95)',
+                      color: 'white',
+                      padding: '0.3rem 0.6rem',
+                      fontSize: '0.85rem',
+                      zIndex: 10,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    Tap to hide comments
+                  </div>
+                )}
+                <h5 className="mt-3 mt-md-0 mb-1">{article.title}</h5>
                 <div className="flex-grow-1 overflow-hidden" style={{ marginBottom: '0.5rem' }}>
                   <p>{article.content}</p>
                   {activeImage?.id && (
@@ -232,7 +269,7 @@ export default function ImageViewerModal({
 
           <button
             type="button"
-            className="btn-close position-absolute top-0 end-0 m-3"
+            className={`btn-close position-absolute top-0 end-0 ${isComment?'mt-5 mt-md-3 me-3':'m-3'} `}
             onClick={onClose}
           />
         </div>

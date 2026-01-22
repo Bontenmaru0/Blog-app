@@ -19,11 +19,11 @@ export default function ImageViewerModal({
   onClose,
 }: Props) {
   const dispatch = useAppDispatch()
+  const { user } = useAppSelector((state) => state.auth)
+  const { insertCommentLoading, insertCommentError } = useAppSelector((state) => state.comments)
 
   const [activeIndex, setActiveIndex] = useState(startIndex)
   const activeImage = images[activeIndex] ?? null
-
-  // console.log("IMAGES DATA: ", images)
 
   useEffect(() => {
     setActiveIndex(startIndex)
@@ -38,22 +38,13 @@ export default function ImageViewerModal({
   }, [activeImage?.id, article.id, dispatch])
 
   const handlePrev = () => {
-    setActiveIndex(i => {
-      const next = i === 0 ? images.length - 1 : i - 1
-      // console.log('⬅️ Prev image index:', next)
-      return next
-    })
+    setActiveIndex(i => (i === 0 ? images.length - 1 : i - 1))
   }
 
   const handleNext = () => {
-    setActiveIndex(i => {
-      const next = i === images.length - 1 ? 0 : i + 1
-      // console.log('➡️ Next image index:', next)
-      return next
-    })
+    setActiveIndex(i => (i === images.length - 1 ? 0 : i + 1))
   }
 
-  // Keyboard navigation
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (images.length <= 1) return
@@ -65,31 +56,15 @@ export default function ImageViewerModal({
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [images.length, onClose])
 
-  // useEffect(() => {
-  //   console.log('🖼️ Modal opened with image:', images[startIndex])
-  //   console.log('🧭 startIndex:', startIndex)
-  // }, [startIndex, images])
-
-
-  // useEffect(() => {
-  //   if (!activeImage) return
-
-  //   console.log('📸 Active image changed:', {
-  //     index: activeIndex,
-  //     id: activeImage.id,
-  //     url: activeImage.image_url,
-  //   })
-  // }, [activeImage, activeIndex])
   const commentSectionRef = useRef<ImageCommentSectionRef>(null)
-  const { insertCommentLoading, insertCommentError } = useAppSelector((state) => state.comments)
-
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const [commentText, setCommentText] = useState('')
+
   const commentInput = () => {
     if (!textareaRef.current) return
 
     const ta = textareaRef.current
-    const maxHeight = 100
+    const maxHeight = 200
     const minHeight = 50
 
     ta.style.height = 'auto'
@@ -97,8 +72,9 @@ export default function ImageViewerModal({
     ta.style.height = `${newHeight}px`
     ta.style.overflowY = ta.scrollHeight > maxHeight ? 'auto' : 'hidden'
   }
-  // console.log("REMOVE LATER, IMAGE ID: ", activeImage?.id)
+
   const submitComment = async () => {
+    if (!user) return
     if (!commentText.trim()) return
     if (!activeImage?.id) return
 
@@ -111,7 +87,6 @@ export default function ImageViewerModal({
 
     try {
       await dispatch(createCommentThunk(payload)).unwrap()
-
       await dispatch(fetchImagesCommentsThunk({ articleId: article.id, imageId: activeImage.id })).unwrap()
 
       commentSectionRef.current?.scrollToTop(true)
@@ -124,7 +99,7 @@ export default function ImageViewerModal({
       window.showToast('Error', insertCommentError || 'Failed to send comment', 'error')
     }
   }
- 
+
   return (
     <div
       className="modal fade show"
@@ -155,7 +130,7 @@ export default function ImageViewerModal({
                     zIndex: 10,
                   }}
                 >
-                  {/* AruDonno x {article.full_name ?? article.author} */}{article.full_name ?? article.author}
+                  Modern Samurai x {article.full_name ?? article.author}
                 </div>
 
                 {activeImage ? (
@@ -214,40 +189,42 @@ export default function ImageViewerModal({
                   )}
                 </div>
 
-                <div className="position-relative">
-                  <textarea
-                    ref={textareaRef}
-                    className="form-control rounded-0"
-                    rows={1}
-                    placeholder="Write a comment…"
-                    value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
-                    onInput={commentInput}
-                    onKeyDown={(e) =>
-                      e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), submitComment())
-                    }
-                    style={{
-                      paddingRight: '4rem',
-                      paddingBottom: '2.5rem',
-                      resize: 'none',
-                      minHeight: '50px',
-                      maxHeight: '200px',
-                    }}
-                  />
-                  <button
-                    className="btn btn-dark btn-sm position-absolute bottom-0 end-0 m-1 rounded-0"
-                    style={{ zIndex: 10 }}
-                    onClick={submitComment}
-                    disabled={insertCommentLoading || !commentText.trim()}
-                  >
-                    <i className="bi bi-send"></i> {insertCommentLoading ? 'Sending...' : 'Send'}
-                  </button>
-                </div>
-                {/* Textarea container fixed at bottom */}
-                {/* Make this container sticky/fixed inside flex column */}
-                <div style={{ flexShrink: 0 }}>
-                  {/* This is where your textarea + send button lives inside CommentSection */}
-                </div>
+                {user ? (
+                  <div className="position-relative">
+                    <textarea
+                      ref={textareaRef}
+                      className="form-control rounded-0"
+                      rows={1}
+                      placeholder="Write a comment…"
+                      value={commentText}
+                      onChange={(e) => setCommentText(e.target.value)}
+                      onInput={commentInput}
+                      onKeyDown={(e) =>
+                        e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), submitComment())
+                      }
+                      style={{
+                        paddingRight: '4rem',
+                        paddingBottom: '2.5rem',
+                        resize: 'none',
+                        minHeight: '50px',
+                        maxHeight: '200px',
+                      }}
+                    />
+                    <button
+                      className="btn btn-dark btn-sm position-absolute bottom-0 end-0 m-1 rounded-0"
+                      style={{ zIndex: 10 }}
+                      onClick={submitComment}
+                      disabled={insertCommentLoading || !commentText.trim()}
+                    >
+                      <i className="bi bi-send"></i> {insertCommentLoading ? 'Sending...' : 'Send'}
+                    </button>
+                  </div>
+                ) : (
+                  <p className="text-muted small">
+                    You must <strong>log in</strong> to post a comment.
+                  </p>
+                )}
+
               </div>
 
             </div>

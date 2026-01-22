@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react'
-import CommentSection from './ImageCommentSection'
-import { useAppDispatch } from '../../app/hooks'
-import { fetchImagesCommentsThunk } from '../../features/comments/commentsSlice'
+import { useState, useEffect, useRef } from 'react'
+import ImageCommentSection from './ImageCommentSection'
+import { useAppDispatch, useAppSelector } from '../../app/hooks'
+import { fetchImagesCommentsThunk, createCommentThunk } from '../../features/comments/commentsSlice'
 import type { GridImage } from '../ArticleImageGrid'
+import type { ImageCommentSectionRef } from './ImageCommentSection'
 
 interface Props {
   images: GridImage[]
@@ -21,6 +22,8 @@ export default function ImageViewerModal({
 
   const [activeIndex, setActiveIndex] = useState(startIndex)
   const activeImage = images[activeIndex] ?? null
+
+  // console.log("IMAGES DATA: ", images)
 
   useEffect(() => {
     setActiveIndex(startIndex)
@@ -77,7 +80,51 @@ export default function ImageViewerModal({
   //     url: activeImage.image_url,
   //   })
   // }, [activeImage, activeIndex])
+  const commentSectionRef = useRef<ImageCommentSectionRef>(null)
+  const { insertCommentLoading, insertCommentError } = useAppSelector((state) => state.comments)
 
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [commentText, setCommentText] = useState('')
+  const commentInput = () => {
+    if (!textareaRef.current) return
+
+    const ta = textareaRef.current
+    const maxHeight = 100
+    const minHeight = 50
+
+    ta.style.height = 'auto'
+    const newHeight = Math.min(Math.max(ta.scrollHeight, minHeight), maxHeight)
+    ta.style.height = `${newHeight}px`
+    ta.style.overflowY = ta.scrollHeight > maxHeight ? 'auto' : 'hidden'
+  }
+  // console.log("REMOVE LATER, IMAGE ID: ", activeImage?.id)
+  const submitComment = async () => {
+    if (!commentText.trim()) return
+    if (!activeImage?.id) return
+
+    const payload = {
+      articleId: article.id,
+      imageId: activeImage.id,
+      parentId: null,
+      content: commentText,
+    }
+
+    try {
+      await dispatch(createCommentThunk(payload)).unwrap()
+
+      await dispatch(fetchImagesCommentsThunk({ articleId: article.id, imageId: activeImage.id })).unwrap()
+
+      commentSectionRef.current?.scrollToTop(true)
+
+      setCommentText('')
+      if (textareaRef.current) textareaRef.current.style.height = '50px'
+
+      window.showToast('Success', 'Comment sent successfully!', 'success')
+    } catch (err) {
+      window.showToast('Error', insertCommentError || 'Failed to send comment', 'error')
+    }
+  }
+ 
   return (
     <div
       className="modal fade show"
@@ -152,17 +199,54 @@ export default function ImageViewerModal({
               </div>
 
               {/* RIGHT: ARTICLE + COMMENTS */}
-              <div className="col-md-3 d-flex flex-column p-3">
+              <div className="col-md-3 d-flex flex-column p-3" style={{ height: '100%' }}>
                 <h5 className="mb-1">{article.title}</h5>
-                <div className="flex-grow-1 overflow-auto">
+                
+                <div className="flex-grow-1 overflow-hidden" style={{ marginBottom: '0.5rem' }}>
                   <p>{article.content}</p>
                   {activeImage?.id && (
-                    <CommentSection
+                    <ImageCommentSection
+                      ref={commentSectionRef}
                       key={activeImage?.id}
                       articleId={article.id}
                       imageId={activeImage?.id}
                     />
                   )}
+                </div>
+
+                <div className="position-relative">
+                  <textarea
+                    ref={textareaRef}
+                    className="form-control rounded-0"
+                    rows={1}
+                    placeholder="Write a comment…"
+                    value={commentText}
+                    onChange={(e) => setCommentText(e.target.value)}
+                    onInput={commentInput}
+                    onKeyDown={(e) =>
+                      e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), submitComment())
+                    }
+                    style={{
+                      paddingRight: '4rem',
+                      paddingBottom: '2.5rem',
+                      resize: 'none',
+                      minHeight: '50px',
+                      maxHeight: '200px',
+                    }}
+                  />
+                  <button
+                    className="btn btn-dark btn-sm position-absolute bottom-0 end-0 m-1 rounded-0"
+                    style={{ zIndex: 10 }}
+                    onClick={submitComment}
+                    disabled={insertCommentLoading || !commentText.trim()}
+                  >
+                    <i className="bi bi-send"></i> {insertCommentLoading ? 'Sending...' : 'Send'}
+                  </button>
+                </div>
+                {/* Textarea container fixed at bottom */}
+                {/* Make this container sticky/fixed inside flex column */}
+                <div style={{ flexShrink: 0 }}>
+                  {/* This is where your textarea + send button lives inside CommentSection */}
                 </div>
               </div>
 

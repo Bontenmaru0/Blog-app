@@ -110,6 +110,7 @@ export default function ArticleCommentSection({ articleId }: Props) {
         <ArticleCommentItem
           key={comment.id}
           comment={comment}
+          articleId={articleId}
           currentUserId={user?.id}
         />
       ))}

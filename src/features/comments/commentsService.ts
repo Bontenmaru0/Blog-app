@@ -30,6 +30,7 @@ export const fetchArticleComments = async (
   });
 
   if (error) throw error;
+  // console.log(data)
   return data ?? [];
 };
 
@@ -43,7 +44,7 @@ export const fetchImagesComments = async (
   });
 
   if (error) throw error;
-  console.log("fetchImagesComments data:", data);
+  // console.log("fetchImagesComments data:", data);
   return data ?? [];
 };
 

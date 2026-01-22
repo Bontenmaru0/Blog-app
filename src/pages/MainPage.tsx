@@ -11,6 +11,7 @@ import ArticleImageGrid from '../components/ArticleImageGrid'
 import type { GridImage } from '../components/ArticleImageGrid'
 import ImageViewerModal from '../components/ArticleDetailsOnView/ImageViewerModal'
 import ArticleCommentSection from '../components/ArticleCommentSection'
+// import ArticleCommentInput from '../components/ArticleCommentInput'
 
 export default function MainPage() {
   const { user } = useAppSelector((state) => state.auth)
@@ -200,7 +201,6 @@ export default function MainPage() {
               {articles.map((article: any) => {
                 const isDeleting = !!deleteLoadingById[article.id]
                 const isEditing = editingArticleId === article.id
-
                 return (
                   <div key={article.id} className="card mb-3 rounded-0">
                     <div className="card-body position-relative">
@@ -237,12 +237,14 @@ export default function MainPage() {
                           {article.created_at ? timeAgo(article.created_at) : 'Unknown date'}
                         </small>
 
+                        {/* <AriticleCommentInput articleId={article.id} /> */}
+
                         {/* comments*/}
                         <ArticleCommentSection 
                           key={article.id}
                           articleId={article.id}
                         />
-
+                        
                         {user && article.author_id === user.id && (
                           <div className="d-flex gap-2 mt-2 justify-content-end flex-wrap flex-sm-nowrap">
                             <button

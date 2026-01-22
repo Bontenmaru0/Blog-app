@@ -1,111 +1,74 @@
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useRef, forwardRef, useImperativeHandle } from 'react'
 import { useAppDispatch, useAppSelector } from '../../app/hooks'
-import { fetchImagesCommentsThunk, createCommentThunk } from '../../features/comments/commentsSlice'
+import { fetchImagesCommentsThunk } from '../../features/comments/commentsSlice'
 import ImageCommentItem from './ImageCommentItem'
+
+export interface ImageCommentSectionRef {
+  scrollToTop: (smooth?: boolean) => void
+}
 
 interface Props {
   articleId: string
   imageId: string
 }
 
-export default function ImageCommentSection({ articleId, imageId }: Props) {
-  const dispatch = useAppDispatch()
-  const { imageComments, imageContentLoading, insertCommentLoading, insertCommentError, imageTotals } = useAppSelector((state) => state.comments)
-  const { user } = useAppSelector((state) => state.auth)
+const ImageCommentSection = forwardRef<ImageCommentSectionRef, Props>(
+  ({ articleId, imageId }, ref) => {
+    const dispatch = useAppDispatch()
+    const { imageComments, imageContentLoading, imageTotals } =
+      useAppSelector((state) => state.comments)
+    const { user } = useAppSelector((state) => state.auth)
 
-  const [text, setText] = useState('')
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+    const commentsContainerRef = useRef<HTMLDivElement>(null)
+    const comments = imageComments[imageId] || []
 
-  const comments = imageComments[imageId] || []
+    useImperativeHandle(ref, () => ({
+      scrollToTop: (smooth = false) => {
+        if (!commentsContainerRef.current) return
+        commentsContainerRef.current.scrollTo({
+          top: 0,
+          behavior: smooth ? 'smooth' : 'auto',
+        })
+      },
+    }))
 
-  useEffect(() => {
-    if (!articleId || !imageId) return
-    dispatch(fetchImagesCommentsThunk({ articleId, imageId }))
-  }, [articleId, imageId, dispatch])
+    useEffect(() => {
+      if (!articleId || !imageId) return
+      dispatch(fetchImagesCommentsThunk({ articleId, imageId }))
+    }, [articleId, imageId, dispatch])
 
-  useEffect(() => {
-    setText('')
-  }, [imageId])
+    return (
+      <div className="d-flex flex-column h-100">
+        <h6 className="mb-1">
+          Comments {imageTotals[imageId] !== undefined && `(${imageTotals[imageId]})`}
+        </h6>
 
-  const handleInput = () => {
-    if (!textareaRef.current) return;
-
-    const ta = textareaRef.current;
-    const maxHeight = 100; // same as your CSS maxHeight
-
-    ta.style.height = 'auto'; // reset height to recalc scrollHeight
-    if (ta.scrollHeight <= maxHeight) {
-        ta.style.height = `${ta.scrollHeight}px`; // grow until maxHeight
-        ta.style.overflowY = 'hidden'; // hide scrollbar while growing
-    } else {
-        ta.style.height = `${maxHeight}px`; // cap at maxHeight
-        ta.style.overflowY = 'auto'; // enable scrollbar
-    }
-  };
-
-  const handlePost = async () => {
-  if (!text.trim()) return
-  const payload = {
-    articleId,
-    imageId,
-    parentId: null,
-    content: text,
-  }
-  try {
-    await dispatch(createCommentThunk(payload)).unwrap()
-    setText('')
-
-    window.showToast('Success', 'Comment sent successfully!', 'success')
-  } catch (err) {
-    window.showToast('Error', insertCommentError || 'Failed to send comment', 'error')
-  }
-}
-
-  return (
-    <div className="d-flex flex-column">
-      <h6 className="mb-1">Comments {imageTotals[imageId] !== undefined && `(${imageTotals[imageId]})`}</h6>
-
-      {/* textarea + Post button */}
-      <div className="position-relative mb-3">
-        <textarea
-          ref={textareaRef}
-          className="form-control rounded-0"
-          rows={1}
-          placeholder="Write a comment…"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onInput={handleInput}
-          onKeyDown={(e) =>
-            e.key === 'Enter' && !e.shiftKey && (e.preventDefault(), handlePost())
-          }
-          style={{
-            paddingRight: '4rem',
-            paddingBottom: '2.5rem',
-            overflow: 'hidden',
-            resize: 'none',
-            minHeight: '50px',
-            maxHeight: '200px',
-          }}
-        />
-        <button
-          className="btn btn-dark btn-sm position-absolute bottom-0 end-0 m-1 rounded-0"
-          style={{ zIndex: 10 }}
-          onClick={handlePost}
-          disabled={insertCommentLoading || !text.trim()}
+        <div
+          ref={commentsContainerRef}
+          className="flex-grow-1 overflow-auto mb-2"
+          style={{ paddingRight: '0.5rem' }}
         >
-          <i className="bi bi-send"></i> {insertCommentLoading ? 'Sending...' : 'Send'}
-        </button>
+          {imageContentLoading && (
+            <p className="text-muted small">Loading comments…</p>
+          )}
+
+          {comments.map((comment) => (
+            <ImageCommentItem
+              key={comment.id}
+              comment={comment}
+              currentUserId={user?.id}
+              articleId={articleId}
+              imageId={imageId}
+            />
+          ))}
+
+          {!imageContentLoading && comments.length === 0 && (
+            <p className="text-muted small">No comments yet.</p>
+          )}
+        </div>
       </div>
+    )
+  }
+)
 
-      {imageContentLoading && <p className="text-muted small">Loading comments…</p>}
-
-      {comments.map((comment) => (
-        <ImageCommentItem
-          key={comment.id}
-          comment={comment}
-          currentUserId={user?.id}
-        />
-      ))}
-    </div>
-  )
-}
+export default ImageCommentSection

@@ -1,14 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import {
-  fetchArticleComments,
-  fetchImagesComments,
-  createComment,
-  updateComment,
-  deleteComment,
-  type Comment,
-} from "./commentsService";
+import { fetchArticleComments, fetchImagesComments, createComment, updateComment, deleteComment, type Comment, } from "./commentsService";
 
-// ===== Payload Types =====
+// payload for create comment
 interface CreateCommentPayload {
   articleId: string;
   imageId: string | null;
@@ -16,17 +9,17 @@ interface CreateCommentPayload {
   content: string;
 }
 
-// ===== State =====
+// state
 interface CommentState {
-  // Article-level comments keyed by articleId
+  // article-level comments keyed by articleId
   articleComments: Record<string, Comment[]>;
   articleTotals: Record<string, number>;
 
-  // Image-level comments keyed by imageId
+  // image-level comments keyed by imageId
   imageComments: Record<string, Comment[]>;
   imageTotals: Record<string, number>;
 
-  // Loading/Error states (separate for article & image)
+  // loading/error states (separate for article & image)
   articleContentLoading: boolean;
   articleContentError: string | null;
 
@@ -62,7 +55,7 @@ const initialState: CommentState = {
   deleteCommentError: null,
 };
 
-// ===== Helpers =====
+// helpers
 function addCommentToMap(commentsMap: Record<string, Comment[]>, totalsMap: Record<string, number>, comment: Comment) {
   const key = comment.image_id ?? comment.article_id;
   commentsMap[key] = [comment, ...(commentsMap[key] || [])];
@@ -84,7 +77,7 @@ function deleteCommentFromMap(commentsMap: Record<string, Comment[]>, totalsMap:
   });
 }
 
-// ===== Thunks =====
+// thunks 
 export const fetchArticleCommentsThunk = createAsyncThunk<Comment[], { articleId: string }>(
   "comments/fetchArticleComments",
   async ({ articleId }) => fetchArticleComments(articleId)
@@ -112,13 +105,13 @@ export const deleteCommentThunk = createAsyncThunk(
   }
 );
 
-// ===== Slice =====
+// slice
 const commentsSlice = createSlice({
   name: "comments",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
-    // ===== FETCH ARTICLE =====
+    // fetch article comments
     builder
       .addCase(fetchArticleCommentsThunk.pending, (state) => {
         state.articleContentLoading = true;
@@ -136,7 +129,7 @@ const commentsSlice = createSlice({
         state.articleContentError = action.error.message ?? "Failed to fetch article comments.";
       });
 
-    // ===== FETCH IMAGE =====
+    // fetch image comments
     builder
       .addCase(fetchImagesCommentsThunk.pending, (state) => {
         state.imageContentLoading = true;
@@ -154,7 +147,7 @@ const commentsSlice = createSlice({
         state.imageContentError = action.error.message ?? "Failed to fetch image comments.";
       });
 
-    // ===== CREATE =====
+    // create
     builder
       .addCase(createCommentThunk.pending, (state) => {
         state.insertCommentLoading = true;
@@ -173,7 +166,7 @@ const commentsSlice = createSlice({
         state.insertCommentError = action.error.message ?? "Failed to create comment.";
       });
 
-    // ===== UPDATE =====
+    // update
     builder
       .addCase(updateCommentThunk.pending, (state) => {
         state.updateCommentLoading = true;
@@ -191,7 +184,7 @@ const commentsSlice = createSlice({
         state.updateCommentError = action.error.message ?? "Failed to update comment.";
       });
 
-    // de,le
+    // delete
     builder
       .addCase(deleteCommentThunk.pending, (state) => {
         state.deleteCommentLoading = true;

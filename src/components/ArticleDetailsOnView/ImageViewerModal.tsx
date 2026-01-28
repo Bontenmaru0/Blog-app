@@ -76,6 +76,18 @@ export default function ImageViewerModal({
     ta.style.overflowY = ta.scrollHeight > maxHeight ? 'auto' : 'hidden'
   }
 
+  const [commentImage, setCommentImage] = useState<File | null>(null)
+  const [commentImagePreview, setCommentImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleCommentImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+
+    setCommentImage(file)
+    setCommentImagePreview(URL.createObjectURL(file))
+  }
+
   const submitComment = async () => {
     if (!user) return
     if (!commentText.trim()) return
@@ -226,6 +238,41 @@ export default function ImageViewerModal({
                   )}
                 </div>
 
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleCommentImageChange}
+                  hidden
+                />
+                {commentImagePreview && (
+                  <div className="mb-2 position-relative" style={{ display: 'inline-block' }}>
+                    <img
+                      src={commentImagePreview}
+                      alt="Preview"
+                      className="img-fluid"
+                      style={{ maxHeight: 120, objectFit: 'cover' }}
+                    />
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-dark position-absolute top-0 start-0 rounded-0"
+                      style={{
+                        padding: '0 6px',
+                        lineHeight: '1',
+                        fontSize: '0.8rem',
+                        zIndex: 10,
+                      }}
+                      onClick={() => {
+                        setCommentImage(null)
+                        setCommentImagePreview(null)
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
+
+                
                 {user ? (
                   <div className="position-relative">
                     <textarea
@@ -241,27 +288,43 @@ export default function ImageViewerModal({
                       }
                       style={{
                         paddingRight: '4rem',
+                        paddingLeft: '2.5rem',
                         paddingBottom: '2.5rem',
                         resize: 'none',
                         minHeight: '50px',
                         maxHeight: '200px',
                       }}
                     />
+
+                    {/* Upload image button */}
+                    <button
+                      type="button"
+                      className="btn btn-light btn-sm position-absolute bottom-0 start-0 m-1 rounded-0"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={insertCommentLoading}
+                    >
+                      <i className="bi bi-image"></i>
+                    </button>
+
+                    {/* Send button */}
                     <button
                       className="btn btn-dark btn-sm position-absolute bottom-0 end-0 m-1 rounded-0"
-                      style={{ zIndex: 10 }}
                       onClick={submitComment}
-                      disabled={insertCommentLoading || !commentText.trim()}
+                      disabled={insertCommentLoading || (!commentText.trim() && !commentImage)}
                     >
-                      <i className="bi bi-send"></i> {insertCommentLoading ? 'Sending...' : 'Send'}
+                      <i className="bi bi-send"></i>
+                      {insertCommentLoading ? ' Sending...' : ' Send'}
                     </button>
                   </div>
+
+                  
                 ) : (
                   <p className="text-muted small">
                     You must <strong>log in</strong> to post a comment.
                   </p>
                 )}
 
+                
               </div>
 
             </div>

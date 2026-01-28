@@ -1,4 +1,3 @@
-// src/features/blog/blogSlice.ts
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { fetchArticles, createArticle, updateArticle, deleteArticle, } from './blogService'
 

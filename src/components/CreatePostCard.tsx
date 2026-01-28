@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function CreatePostCard({ visible, onCancel }: Props) {
-  // ✅ Hooks called first, always
+  
   const { profile } = useAppSelector((state) => state.profiles)
   const { insertArticleLoading } = useAppSelector((state) => state.blog)
   const dispatch = useAppDispatch()
@@ -22,10 +22,8 @@ export default function CreatePostCard({ visible, onCancel }: Props) {
   const [searchTerm] = useState('')
   const limit = 5
 
-  // Early return for invisible state
   if (!visible) return null
 
-  // Add images to state & previews
   const handleAddImages = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return
     const newFiles = Array.from(e.target.files)
@@ -33,7 +31,6 @@ export default function CreatePostCard({ visible, onCancel }: Props) {
     setPreviews(prev => [...prev, ...newFiles.map(f => URL.createObjectURL(f))])
   }
 
-  // Submit form
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     try {

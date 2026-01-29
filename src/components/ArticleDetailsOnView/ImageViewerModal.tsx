@@ -79,9 +79,15 @@ export default function ImageViewerModal({ images, startIndex, article, onClose 
       await dispatch(createCommentThunk(payload)).unwrap()
       await dispatch(fetchImagesCommentsThunk({ articleId: article.id, imageId: activeImage.id })).unwrap()
       commentSectionRef.current?.scrollToTop(true)
+
       setCommentText('')
       setCommentImage(null)
       setCommentImagePreview(null)
+
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ''
+      }
+
       if (textareaRef.current) textareaRef.current.style.height = '50px'
       window.showToast('Success', 'Comment sent successfully!', 'success')
     } catch (err) {

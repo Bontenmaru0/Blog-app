@@ -1,81 +1,124 @@
-import { useState, useRef, useEffect } from "react";
-import { useAppDispatch, useAppSelector } from "../../app/hooks";
-import { fetchImagesCommentsThunk, deleteCommentThunk, updateCommentThunk } from "../../features/comments/commentsSlice";
+import { useState, useRef, useEffect } from "react"
+import { useAppDispatch, useAppSelector } from "../../app/hooks"
+import { fetchImagesCommentsThunk, deleteCommentThunk, updateCommentThunk } from "../../features/comments/commentsSlice"
 
 interface Props {
-  comment: any;
-  currentUserId?: string;
-  articleId: string;
+  comment: any
+  currentUserId?: string
+  articleId: string
   imageId: string
 }
 
-export default function ImageCommentItem({ comment, currentUserId, articleId, imageId }: Props) {
-  const dispatch = useAppDispatch();
-  const { deleteCommentLoading, deleteCommentError } = useAppSelector(
+export default function ImageCommentItem({
+  comment,
+  currentUserId,
+  articleId,
+  imageId
+}: Props) {
+  const dispatch = useAppDispatch()
+  const { deleteCommentLoading, deleteCommentError, updateCommentLoading, updateCommentError } = useAppSelector(
     (state) => state.comments
-  );
+  )
 
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editText, setEditText] = useState(comment.content);
-  const [updateLoading, setUpdateLoading] = useState(false);
+  const isOwner = comment.user_id === currentUserId
 
-  const editRef = useRef<HTMLTextAreaElement>(null);
-  const isOwner = comment.user_id === currentUserId;
+  const [confirmDelete, setConfirmDelete] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editText, setEditText] = useState(comment.content)
+
+  // 🔹 IMAGE EDIT STATE
+  const [editImageFile, setEditImageFile] = useState<File | null>(null)
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(comment.image?.image_url ?? null)
+  const [removeExistingImage, setRemoveExistingImage] = useState(false)
+
+  const removedImageUrl = removeExistingImage ? comment.image?.image_url ?? null : null
+
+  const editRef = useRef<HTMLTextAreaElement>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Sync local image state when Redux updates
+  useEffect(() => {
+    if (!isEditing) {
+      setEditImagePreview(comment.image?.image_url ?? null)
+      setEditImageFile(null)
+      setRemoveExistingImage(false)
+    }
+  }, [comment.image?.image_url])
+
+  // Auto-grow textarea
+  useEffect(() => {
+    if (!editRef.current) return
+    const ta = editRef.current
+    const maxHeight = 100
+
+    ta.style.height = "auto"
+    if (ta.scrollHeight <= maxHeight) {
+      ta.style.height = `${ta.scrollHeight}px`
+      ta.style.overflowY = "hidden"
+    } else {
+      ta.style.height = `${maxHeight}px`
+      ta.style.overflowY = "auto"
+    }
+  }, [editText, isEditing])
 
   const handleDelete = async () => {
     try {
-      await dispatch(deleteCommentThunk({ commentId: comment.id })).unwrap();
-      window.showToast("Success", "Comment deleted successfully", "success");
-    } catch (err: any) {
-      window.showToast(
-        "Error",
-        deleteCommentError || "Failed to delete comment. Something went wrong.",
-        "error"
-      );
+      await dispatch(deleteCommentThunk({ commentId: comment.id })).unwrap()
+      window.showToast("Success", "Comment deleted successfully", "success")
+    } catch {
+      window.showToast( "Error", deleteCommentError || "Failed to delete comment", "error" )
     } finally {
-      setConfirmDelete(false);
+      setConfirmDelete(false)
     }
-  };
+  }
 
   const handleSaveEdit = async () => {
-    if (!editText.trim() || editText === comment.content) {
-      setIsEditing(false);
-      return;
-    }
-
     try {
-      setUpdateLoading(true);
-      await dispatch(updateCommentThunk({ commentId: comment.id, content: editText, stats: 'edited' })).unwrap();
-      dispatch(fetchImagesCommentsThunk({ articleId, imageId }))
-      window.showToast("Success", "Comment updated successfully", "success");
-      setIsEditing(false);
-    } catch (err: any) {
-      window.showToast(
-        "Error",
-        "Failed to update comment. Something went wrong.",
-        "error"
-      );
-    } finally {
-      setUpdateLoading(false);
-    }
-  };
+      await dispatch(updateCommentThunk({
+        commentId: comment.id,
+        content: editText,
+        stats: 'edited',
+        newImage: editImageFile,
+        removedImage: removedImageUrl,
+        articleId: articleId
+      })).unwrap()
 
-  // Auto-grow + scroll for edit textarea
-  useEffect(() => {
-    if (!editRef.current) return;
-    const ta = editRef.current;
-    const maxHeight = 100; // px, adjust to your design
-
-    ta.style.height = "auto";
-    if (ta.scrollHeight <= maxHeight) {
-      ta.style.height = `${ta.scrollHeight}px`;
-      ta.style.overflowY = "hidden";
-    } else {
-      ta.style.height = `${maxHeight}px`;
-      ta.style.overflowY = "auto";
+      await dispatch(fetchImagesCommentsThunk({ articleId, imageId }))
+      window.showToast("Success", "Comment updated successfully", "success")
+      setIsEditing(false)
+    } catch {
+      window.showToast("Error", updateCommentError||"Failed to update comment", "error")
     }
-  }, [editText, isEditing]);
+  }
+
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setEditImageFile(file)
+    setEditImagePreview(URL.createObjectURL(file))
+
+    // Mark original image as removed if replacing
+    if (comment.image?.image_url) {
+      setRemoveExistingImage(true)
+    }
+  }
+
+  const removeImage = () => {
+    setEditImageFile(null)
+    setEditImagePreview(null)
+    setRemoveExistingImage(true)
+  }
+
+  const cancelEdit = () => {
+    setIsEditing(false)
+    setEditText(comment.content)
+    setEditImageFile(null)
+    setEditImagePreview(comment.image?.image_url ?? null)
+    setRemoveExistingImage(false)
+  }
+
+  const hasImage = !!editImagePreview
 
   return (
     <div className="mb-3 card rounded-0 p-3">
@@ -84,22 +127,59 @@ export default function ImageCommentItem({ comment, currentUserId, articleId, im
         <small className="text-muted">{timeAgo(comment.created_at)}</small>
       </div>
 
-      {/* IMAGE (if exists) */}
-      {comment.image && comment.image.image_url && (
-        <div className="mb-2 mt-2">
+      {/* IMAGE */}
+      <div className="mb-2 mt-2 position-relative d-inline-block">
+        {hasImage ? (
           <img
-            src={comment.image.image_url}
-            alt={comment.image.alt_text ?? ""}
-            style={{
-              maxHeight: '200px',
-              width: 'auto',
-              objectFit: 'contain',
-            }}
+            src={editImagePreview!}
+            alt=""
             className="img-fluid"
+            style={{ maxHeight: 200, objectFit: "contain" }}
           />
-        </div>
+        ) : isEditing ? (
+          <div
+            className="bg-light border w-100"
+            style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <span className="text-muted cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              No image
+            </span>
+          </div>
+        ) : null}
+
+        {/* IMAGE BUTTON (Change/Add) */}
+        {isEditing && (
+          <button
+            type="button"
+            className="btn btn-sm btn-light position-absolute bottom-0 start-0 rounded-0 m-1"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <i className="bi bi-image"></i> {hasImage ? "Change" : "Add"}
+          </button>
+        )}
+
+        {/* REMOVE IMAGE BUTTON */}
+        {isEditing && hasImage && (
+          <button
+            type="button"
+            className="btn btn-sm btn-dark position-absolute top-0 start-0 rounded-0"
+            style={{ padding: "0 6px", lineHeight: 1, fontSize: "0.8rem" }}
+            onClick={removeImage}
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
+      {isEditing && (
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          hidden
+          onChange={handleEditImageChange}
+        />
       )}
-      {/* {console.log(comment.image)} */}
 
       <div className="overflow-auto mb-1">
         {isEditing ? (
@@ -110,11 +190,11 @@ export default function ImageCommentItem({ comment, currentUserId, articleId, im
             onChange={(e) => setEditText(e.target.value)}
             rows={2}
             style={{
-              paddingRight: '4rem',
-              paddingBottom: '2.5rem',
-              resize: 'none',
-              minHeight: '50px',
-              maxHeight: '75px',
+              paddingRight: "4rem",
+              paddingBottom: "2.5rem",
+              resize: "none",
+              minHeight: "50px",
+              maxHeight: "75px"
             }}
           />
         ) : (
@@ -123,7 +203,7 @@ export default function ImageCommentItem({ comment, currentUserId, articleId, im
       </div>
 
       {isOwner && (
-        <div className="d-flex gap-2">
+        <div className="d-flex gap-2 flex-wrap">
           {!isEditing ? (
             <button
               className="btn btn-outline-dark btn-sm rounded-0"
@@ -136,19 +216,18 @@ export default function ImageCommentItem({ comment, currentUserId, articleId, im
               <button
                 className="btn btn-outline-success btn-sm rounded-0"
                 onClick={handleSaveEdit}
-                disabled={updateLoading}
+                disabled={updateCommentLoading}
               >
-                <small>{updateLoading ? "SAVING..." : "SAVE"}</small>
+                <small>{updateCommentLoading ? "SAVING..." : "SAVE"}</small>
               </button>
+
               <button
                 className="btn btn-outline-secondary btn-sm rounded-0"
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditText(comment.content);
-                }}
+                onClick={cancelEdit}
               >
                 <small>CANCEL</small>
               </button>
+              <span className="mx-1">|</span>
             </>
           )}
 
@@ -180,16 +259,16 @@ export default function ImageCommentItem({ comment, currentUserId, articleId, im
         </div>
       )}
     </div>
-  );
+  )
 }
 
 function timeAgo(dateString: string) {
-  const diff = Date.now() - new Date(dateString).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "just now";
-  if (mins < 60) return `${mins} minutes ago`;
-  const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours} hours ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} days ago`;
+  const diff = Date.now() - new Date(dateString).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return "just now"
+  if (mins < 60) return `${mins} minutes ago`
+  const hours = Math.floor(mins / 60)
+  if (hours < 24) return `${hours} hours ago`
+  const days = Math.floor(hours / 24)
+  return `${days} days ago`
 }

@@ -111,14 +111,54 @@ export const createComment = async (
 export const updateComment = async (
   commentId: string,
   content: string,
-  stats: string
+  stats: string,
+  newImage: File | null,
+  removedImage: string | null,
+  articleId: string
 ): Promise<Comment> => {
+
+  let uploadedUrl: string | null = null;
+
+  // remove old image from storage
+  if (removedImage) {
+    const filePath = removedImage.split('/comment_images/')[1];
+
+    if (filePath) {
+      const { error } = await supabase.storage
+        .from('comment_images')
+        .remove([filePath]);
+
+      if (error) throw error;
+    }
+  }
+
+  // upload new image
+  if (newImage) {
+    const filePath = `photos/${Date.now()}_${newImage.name}`;
+
+    const { data, error } = await supabase.storage
+      .from('comment_images')
+      .upload(filePath, newImage);
+
+    if (error) throw error;
+
+    const { data: urlData } = supabase.storage
+      .from('comment_images')
+      .getPublicUrl(data.path);
+
+    uploadedUrl = urlData.publicUrl;
+  }
+
+  // update DB
   const { data, error } = await supabase.rpc(
     "update_comment",
     {
       p_comment_id: commentId,
       p_content: content,
-      p_status: stats
+      p_status: stats,
+      p_new_image: uploadedUrl,   // ✅ URL or null
+      p_removed_image: removedImage,
+      p_article_id: articleId
     }
   );
 

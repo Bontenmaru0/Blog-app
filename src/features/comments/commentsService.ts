@@ -2,19 +2,25 @@ import { supabase } from "../../lib/supabase";
 
 export interface Comment {
   id: string;
+
   article_id: string;
   image_id: string | null;
+
   user_id: string;
   parent_id: string | null;
-  content: string;
+
+  content: string | null;
   status: string;
   created_at: string;
   updated_at: string;
   author_name: string;
   depth: number;
+
   reply_count: number;
   total_article_comments: number;
   total_image_comments: number;
+
+  comment_image: string | null;
 }
 
 export interface FetchCommentsResponse {
@@ -50,19 +56,42 @@ export const fetchImagesComments = async (
 
 export const createComment = async (
   articleId: string,
+  content: string | null,
   imageId: string | null,
   parentId: string | null,
-  content: string
+  comment_image: File | null
 ): Promise<Comment> => {
+
+  const filePath = `photos/${Date.now()}_${comment_image?.name}`;
+
+  let uploadedUrls: string | null = null;
+
+  if (comment_image){
+    const { data, error } = await supabase.storage
+        .from('comment_images')
+        .upload(filePath, comment_image);
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from('comment_images')
+        .getPublicUrl(data.path);
+
+      uploadedUrls = urlData.publicUrl;
+  }
+
   const { data, error } = await supabase.rpc(
     "insert_comment",
     {
       p_article_id: articleId,
       p_content: content,
       p_image_id: imageId,
-      p_parent_id: parentId
+      p_parent_id: parentId,
+      p_comment_image: uploadedUrls
     }
   );
+  console.log("Comments service: ", comment_image)
+  // console.log("Comments service: ", data)
 
   if (error) throw error;
   return data;

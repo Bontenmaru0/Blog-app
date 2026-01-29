@@ -68,10 +68,10 @@ export default function ArticleCommentSection({ articleId }: Props) {
 
     const payload = {
       articleId,
+      content: text,
       imageId: null, // article comment
       parentId: null,
-      content: text,
-      // TODO: handle sending commentImage if backend supports it
+      comment_image: null
     }
 
     try {

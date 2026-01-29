@@ -90,16 +90,19 @@ export default function ImageViewerModal({
 
   const submitComment = async () => {
     if (!user) return
-    if (!commentText.trim()) return
+    if (!commentText.trim()){
+      
+    }
     if (!activeImage?.id) return
 
     const payload = {
       articleId: article.id,
+      content: commentText,
       imageId: activeImage.id,
       parentId: null,
-      content: commentText,
+      comment_image: commentImage
     }
-
+    console.log("ImageViewerModal: ", payload)
     try {
       await dispatch(createCommentThunk(payload)).unwrap()
       await dispatch(fetchImagesCommentsThunk({ articleId: article.id, imageId: activeImage.id })).unwrap()
@@ -271,8 +274,6 @@ export default function ImageViewerModal({
                     </button>
                   </div>
                 )}
-
-                
                 {user ? (
                   <div className="position-relative">
                     <textarea
@@ -294,6 +295,7 @@ export default function ImageViewerModal({
                         minHeight: '50px',
                         maxHeight: '200px',
                       }}
+                      required
                     />
 
                     {/* Upload image button */}
@@ -316,8 +318,6 @@ export default function ImageViewerModal({
                       {insertCommentLoading ? ' Sending...' : ' Send'}
                     </button>
                   </div>
-
-                  
                 ) : (
                   <p className="text-muted small">
                     You must <strong>log in</strong> to post a comment.

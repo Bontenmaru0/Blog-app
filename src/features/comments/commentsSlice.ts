@@ -4,9 +4,10 @@ import { fetchArticleComments, fetchImagesComments, createComment, updateComment
 // payload for create comment
 interface CreateCommentPayload {
   articleId: string;
+  content: string | null;
   imageId: string | null;
   parentId: string | null;
-  content: string;
+  comment_image: File | null;
 }
 
 // state
@@ -89,7 +90,7 @@ export const fetchImagesCommentsThunk = createAsyncThunk<Comment[], { articleId:
 );
 
 export const createCommentThunk = createAsyncThunk("comments/insertComment", async (payload: CreateCommentPayload) => {
-  return createComment(payload.articleId, payload.imageId, payload.parentId, payload.content);
+  return createComment(payload.articleId, payload.content, payload.imageId, payload.parentId, payload.comment_image);
 });
 
 export const updateCommentThunk = createAsyncThunk(

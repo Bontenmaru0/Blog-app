@@ -84,6 +84,23 @@ export default function ImageCommentItem({ comment, currentUserId, articleId, im
         <small className="text-muted">{timeAgo(comment.created_at)}</small>
       </div>
 
+      {/* IMAGE (if exists) */}
+      {comment.image && comment.image.image_url && (
+        <div className="mb-2 mt-2">
+          <img
+            src={comment.image.image_url}
+            alt={comment.image.alt_text ?? ""}
+            style={{
+              maxHeight: '200px',
+              width: 'auto',
+              objectFit: 'contain',
+            }}
+            className="img-fluid"
+          />
+        </div>
+      )}
+      {/* {console.log(comment.image)} */}
+
       <div className="overflow-auto mb-1">
         {isEditing ? (
           <textarea

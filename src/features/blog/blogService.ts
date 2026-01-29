@@ -1,4 +1,3 @@
-// src/features/blog/blogService.ts
 import { supabase } from '../../lib/supabase'
 
 export interface Article {

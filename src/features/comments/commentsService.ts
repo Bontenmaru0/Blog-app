@@ -1,5 +1,12 @@
 import { supabase } from "../../lib/supabase";
 
+interface CommentImage {
+  id: string;
+  image_url: string;
+  alt_text: string | null;
+  position: number;
+}
+
 export interface Comment {
   id: string;
 
@@ -20,7 +27,7 @@ export interface Comment {
   total_article_comments: number;
   total_image_comments: number;
 
-  comment_image: string | null;
+  image: CommentImage[] | null;
 }
 
 export interface FetchCommentsResponse {
@@ -51,7 +58,10 @@ export const fetchImagesComments = async (
 
   if (error) throw error;
   // console.log("fetchImagesComments data:", data);
-  return data ?? [];
+  return (data ?? []).map((comment: Comment) => ({
+    ...comment,
+    image: comment.image?.[0] ?? null
+  }));
 };
 
 export const createComment = async (

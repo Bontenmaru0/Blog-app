@@ -22,13 +22,6 @@ export default function ArticleCommentItem({
     (state) => state.comments
   )
 
-  // console.log(comment)
-
-  const initialImageUrl =
-  Array.isArray(comment.image)
-    ? comment.image[0]?.image_url ?? null
-    : comment.image?.image_url ?? null
-
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(comment.content)
@@ -36,8 +29,7 @@ export default function ArticleCommentItem({
 
   //  image edit state
   const [editImageFile, setEditImageFile] = useState<File | null>(null)
-  const [editImagePreview, setEditImagePreview] =
-  useState<string | null>(initialImageUrl)
+  const [editImagePreview, setEditImagePreview] = useState<string | null>(comment.image?.image_url ?? null)
   const [removeExistingImage, setRemoveExistingImage] = useState(false)
 
   const removedImageUrl = removeExistingImage ? comment.image?.image_url ?? null : null
@@ -45,12 +37,12 @@ export default function ArticleCommentItem({
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-  if (!isEditing) {
-    setEditImagePreview(initialImageUrl)
-    setEditImageFile(null)
-    setRemoveExistingImage(false)
-  }
-}, [initialImageUrl, isEditing])
+    if (!isEditing) {
+      setEditImagePreview(comment.image?.image_url ?? null)
+      setEditImageFile(null)
+      setRemoveExistingImage(false)
+    }
+  }, [comment.image?.image_url])
 
   const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -59,7 +51,6 @@ export default function ArticleCommentItem({
     setEditImageFile(file)
     setEditImagePreview(URL.createObjectURL(file))
 
-    // Mark original image as removed if replacing
     if (comment.image?.image_url) {
       setRemoveExistingImage(true)
     }
@@ -100,7 +91,7 @@ export default function ArticleCommentItem({
           stats: 'edited',
           newImage: editImageFile,
           removedImage: removedImageUrl,
-          articleId: null
+          articleId: articleId
         })
       ).unwrap()
 
@@ -136,6 +127,7 @@ export default function ArticleCommentItem({
   }, [editText, isEditing])
 
   const hasImage = !!editImagePreview
+  // console.log(hasImage)
 
   return (
     <div className="mb-3 card rounded-0 p-3">

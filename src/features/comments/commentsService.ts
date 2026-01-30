@@ -41,10 +41,12 @@ export const fetchArticleComments = async (
   const { data, error } = await supabase.rpc("get_article_comments", {
     p_article_id: articleId,
   });
-
+  console.log("CHECKING FOR IMAGE DATA: ", data)
   if (error) throw error;
-  // console.log(data)
-  return data ?? [];
+  return (data ?? []).map((comment: Comment) => ({
+    ...comment,
+    image: comment.image?.[0] ?? null
+  }));
 };
 
 export const fetchImagesComments = async (
@@ -55,7 +57,7 @@ export const fetchImagesComments = async (
     p_article_id: articleId,
     p_image_id: imageId
   });
-
+ console.log("CHECKING FOR IMAGE DATA: ", data)
   if (error) throw error;
   // console.log("fetchImagesComments data:", data);
   return (data ?? []).map((comment: Comment) => ({
@@ -100,7 +102,7 @@ export const createComment = async (
       p_comment_image: uploadedUrls
     }
   );
-  console.log("Comments service: ", comment_image)
+  // console.log("Comments service: ", comment_image)
   // console.log("Comments service: ", data)
 
   if (error) throw error;
@@ -110,7 +112,7 @@ export const createComment = async (
 
 export const updateComment = async (
   commentId: string,
-  content: string,
+  content: string | null,
   stats: string,
   newImage: File | null,
   removedImage: string | null,
@@ -127,6 +129,13 @@ export const updateComment = async (
       const { error } = await supabase.storage
         .from('comment_images')
         .remove([filePath]);
+
+        // if (error) {
+        //   console.error('Failed to delete image:', error);
+        //   throw error;
+        // } else {
+        //   console.log('Deleted image successfully:', filePath);
+        // }
 
       if (error) throw error;
     }

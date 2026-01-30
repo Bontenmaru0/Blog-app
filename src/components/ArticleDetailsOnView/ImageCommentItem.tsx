@@ -33,6 +33,14 @@ export default function ImageCommentItem({
 
   const removedImageUrl = removeExistingImage ? comment.image?.image_url ?? null : null
 
+  // useEffect(()=>{
+  //   console.log("New Image: ", editImageFile)
+  // },[removedImageUrl])
+
+  // useEffect(()=>{
+  //   console.log("Removed Image Url: ", removedImageUrl)
+  // },[removedImageUrl])
+
   const editRef = useRef<HTMLTextAreaElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 

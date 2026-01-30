@@ -110,21 +110,27 @@ export default function MainPage() {
     }
   }
 
-  const handleDelete = async (articleId: string) => {
+  const handleDelete = async (
+  articleId: string,
+  removedImages: string[] = []
+) => {
   try {
-    await dispatch(deleteArticleThunk(articleId)).unwrap()
+    await dispatch(
+      deleteArticleThunk({
+        id: articleId,
+        removedImages: removedImages,
+      })
+    ).unwrap()
+
     window.showToast('Deleted', 'Article deleted successfully.', 'success')
 
-    // after deletion, fetch articles for the current page
     const resultAction = await dispatch(
       fetchArticlesThunk({ search: searchTerm, limit, page })
     ).unwrap()
 
-    // if the current page becomes empty and it's not the first page, go back one page
     if (resultAction.data.length === 0 && page > 1) {
       setPage(page - 1)
     }
-
   } catch (err: any) {
     const message =
       err?.message || err || 'Failed to delete article. Something went wrong.'
@@ -266,7 +272,7 @@ export default function MainPage() {
                                 <button
                                   className="btn btn-link p-0 text-success text-decoration-none"
                                   disabled={isDeleting}
-                                  onClick={() => handleDelete(article.id)}
+                                  onClick={() => handleDelete(article.id, [])}
                                 >
                                   {isDeleting ? 'DELETING…' : 'YES'}
                                 </button>

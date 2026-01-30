@@ -114,7 +114,7 @@ export const updateComment = async (
   stats: string,
   newImage: File | null,
   removedImage: string | null,
-  articleId: string
+  articleId: string | null
 ): Promise<Comment> => {
 
   let uploadedUrl: string | null = null;
@@ -167,7 +167,20 @@ export const updateComment = async (
 };
 
 
-export const deleteComment = async (commentId: string): Promise<void> => {
+export const deleteComment = async (commentId: string, removedImage: string): Promise<void> => {
+
+  if (removedImage) {
+    const filePath = removedImage.split('/comment_images/')[1];
+
+    if (filePath) {
+      const { error } = await supabase.storage
+        .from('comment_images')
+        .remove([filePath]);
+
+      if (error) throw error;
+    }
+  }
+
   const { error } = await supabase.rpc(
     "delete_comment",
     { p_comment_id: commentId }

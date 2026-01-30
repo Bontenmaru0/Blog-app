@@ -95,13 +95,13 @@ export const createCommentThunk = createAsyncThunk("comments/insertComment", asy
 
 export const updateCommentThunk = createAsyncThunk(
   "comments/updateComment",
-  async (params: { commentId: string; content: string; stats: string, newImage: File | null, removedImage: string | null, articleId: string }) => updateComment(params.commentId, params.content, params.stats, params.newImage, params.removedImage, params.articleId)
+  async (params: { commentId: string; content: string; stats: string, newImage: File | null, removedImage: string | null, articleId: string | null }) => updateComment(params.commentId, params.content, params.stats, params.newImage, params.removedImage, params.articleId)
 );
 
 export const deleteCommentThunk = createAsyncThunk(
   "comments/deleteComment",
-  async ({ commentId }: { commentId: string }) => {
-    await deleteComment(commentId);
+  async ({ commentId, removedImage }: { commentId: string, removedImage: string }) => {
+    await deleteComment(commentId, removedImage);
     return commentId;
   }
 );

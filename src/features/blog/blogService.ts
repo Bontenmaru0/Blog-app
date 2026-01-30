@@ -169,7 +169,18 @@ export const updateArticle = async (
   return { id: articleId }
 }
 
-export const deleteArticle = async (articleId: string) => {
+export const deleteArticle = async (articleId: string, removedImages: string[]) => {
+
+  if (removedImages.length > 0) {
+    await supabase.storage
+      .from('article_images')
+      .remove(
+        removedImages.map(url =>
+          url.split('/article_images/')[1]
+        )
+      )
+  }
+  
   const { error } = await supabase.rpc('delete_article', {
     p_article_id: articleId,
   })

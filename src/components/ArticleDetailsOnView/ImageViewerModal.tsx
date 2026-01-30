@@ -88,7 +88,7 @@ export default function ImageViewerModal({ images, startIndex, article, onClose 
         fileInputRef.current.value = ''
       }
 
-      if (textareaRef.current) textareaRef.current.style.height = '50px'
+      if (textareaRef.current) textareaRef.current.style.height = '70px'
       window.showToast('Success', 'Comment sent successfully!', 'success')
     } catch (err) {
       window.showToast('Error', insertCommentError || 'Failed to send comment', 'error')

@@ -71,7 +71,7 @@ export default function ArticleCommentSection({ articleId }: Props) {
       content: text,
       imageId: null, // article comment
       parentId: null,
-      comment_image: null
+      comment_image: commentImage
     }
 
     try {
@@ -80,7 +80,7 @@ export default function ArticleCommentSection({ articleId }: Props) {
       setCommentImage(null)
       setCommentImagePreview(null)
       dispatch(fetchArticleCommentsThunk({ articleId }))
-      if (textareaRef.current) textareaRef.current.style.height = '50px'
+      if (textareaRef.current) textareaRef.current.style.height = '70px'
       window.showToast('Success', 'Comment sent successfully!', 'success')
     } catch (err: any) {
       window.showToast('Error', insertCommentError || 'Failed to send comment', 'error')
@@ -94,13 +94,14 @@ export default function ArticleCommentSection({ articleId }: Props) {
       </h6>
 
       {/* Hidden file input */}
-      <input
-        type="file"
-        accept="image/*"
-        ref={fileInputRef}
-        onChange={handleCommentImageChange}
-        hidden
-      />
+      <input type="file" accept="image/*" ref={fileInputRef} onChange={handleCommentImageChange} hidden />
+      {commentImagePreview && (
+        <div className="mb-2 position-relative" style={{ display: 'inline-block' }}>
+          <img src={commentImagePreview} alt="Preview" className="img-fluid" style={{ maxHeight: 120, objectFit: 'cover' }} />
+          <button type="button" className="btn btn-sm btn-dark position-absolute top-0 start-0 rounded-0" style={{ padding: '0 6px', lineHeight: '1', fontSize: '0.8rem', zIndex: 10 }}
+            onClick={() => { setCommentImage(null); setCommentImagePreview(null) }}>✕</button>
+        </div>
+      )}
 
       {user ? (
         <div className="position-relative mb-3">
@@ -153,37 +154,6 @@ export default function ArticleCommentSection({ articleId }: Props) {
           You must <strong>log in</strong> to post a comment.
         </p>
       )}
-
-      {/* Image preview */}
-      {commentImagePreview && (
-        <div
-          className="mb-2 position-relative"
-          style={{
-            display: 'inline-block',
-            width: 200,
-            height: 120,
-            overflow: 'hidden',
-          }}
-        >
-          <img
-            src={commentImagePreview}
-            alt="Preview"
-            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-          />
-          <button
-            type="button"
-            className="btn btn-sm btn-dark position-absolute top-0 start-0 rounded-0"
-            style={{ padding: '0 6px', fontSize: '0.8rem', zIndex: 20 }}
-            onClick={() => {
-              setCommentImage(null)
-              setCommentImagePreview(null)
-            }}
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
       {articleContentLoading && <p className="text-muted small">Loading comments…</p>}
 
       {comments.map((comment) => (

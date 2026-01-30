@@ -73,10 +73,16 @@ export const updateArticleThunk = createAsyncThunk<
   }
 )
 
-export const deleteArticleThunk = createAsyncThunk(
+export const deleteArticleThunk = createAsyncThunk<
+  string,
+  {
+    id: string
+    removedImages: string[]
+  }
+>(
   'blog/deleteArticle',
-  async (articleId: string) => {
-    return deleteArticle(articleId);
+  async ({ id, removedImages }) => {
+    return deleteArticle(id, removedImages)
   }
 )
 
@@ -135,16 +141,16 @@ const blogSlice = createSlice({
 
       // delete (per article)
       .addCase(deleteArticleThunk.pending, (state, action) => {
-        state.deleteArticleLoadingById[action.meta.arg] = true;
+        state.deleteArticleLoadingById[action.meta.arg.id] = true;
       })
       .addCase(deleteArticleThunk.fulfilled, (state, action) => {
-        delete state.deleteArticleLoadingById[action.meta.arg];
-        state.articles = state.articles.filter(
-          (a) => a.id !== action.meta.arg
-        );
+        const id = action.meta.arg.id;
+
+        delete state.deleteArticleLoadingById[id];
+        state.articles = state.articles.filter(a => a.id !== id);
       })
       .addCase(deleteArticleThunk.rejected, (state, action) => {
-        delete state.deleteArticleLoadingById[action.meta.arg];
+        delete state.deleteArticleLoadingById[action.meta.arg.id];
         state.deleteArticleError =
           action.error.message || 'Delete failed. Something went wrong.';
       })

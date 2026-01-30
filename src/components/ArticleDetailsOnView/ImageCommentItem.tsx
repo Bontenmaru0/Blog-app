@@ -26,7 +26,7 @@ export default function ImageCommentItem({
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(comment.content)
 
-  // 🔹 IMAGE EDIT STATE
+  //  image edit state
   const [editImageFile, setEditImageFile] = useState<File | null>(null)
   const [editImagePreview, setEditImagePreview] = useState<string | null>(comment.image?.image_url ?? null)
   const [removeExistingImage, setRemoveExistingImage] = useState(false)
@@ -63,7 +63,7 @@ export default function ImageCommentItem({
 
   const handleDelete = async () => {
     try {
-      await dispatch(deleteCommentThunk({ commentId: comment.id })).unwrap()
+      await dispatch(deleteCommentThunk({ commentId: comment.id, removedImage: removedImageUrl })).unwrap()
       window.showToast("Success", "Comment deleted successfully", "success")
     } catch {
       window.showToast( "Error", deleteCommentError || "Failed to delete comment", "error" )

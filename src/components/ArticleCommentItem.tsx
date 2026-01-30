@@ -22,17 +22,61 @@ export default function ArticleCommentItem({
     (state) => state.comments
   )
 
+  // console.log(comment)
+
+  const initialImageUrl =
+  Array.isArray(comment.image)
+    ? comment.image[0]?.image_url ?? null
+    : comment.image?.image_url ?? null
+
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [editText, setEditText] = useState(comment.content)
   const [updateLoading, setUpdateLoading] = useState(false)
+
+  //  image edit state
+  const [editImageFile, setEditImageFile] = useState<File | null>(null)
+  const [editImagePreview, setEditImagePreview] =
+  useState<string | null>(initialImageUrl)
+  const [removeExistingImage, setRemoveExistingImage] = useState(false)
+
+  const removedImageUrl = removeExistingImage ? comment.image?.image_url ?? null : null
+
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+  if (!isEditing) {
+    setEditImagePreview(initialImageUrl)
+    setEditImageFile(null)
+    setRemoveExistingImage(false)
+  }
+}, [initialImageUrl, isEditing])
+
+  const handleEditImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setEditImageFile(file)
+    setEditImagePreview(URL.createObjectURL(file))
+
+    // Mark original image as removed if replacing
+    if (comment.image?.image_url) {
+      setRemoveExistingImage(true)
+    }
+  }
+
+  const removeImage = () => {
+    setEditImageFile(null)
+    setEditImagePreview(null)
+    setRemoveExistingImage(true)
+  }
 
   const editRef = useRef<HTMLTextAreaElement>(null)
   const isOwner = comment.user_id === currentUserId
 
   const handleDelete = async () => {
     try {
-      await dispatch(deleteCommentThunk({ commentId: comment.id })).unwrap()
+      await dispatch(deleteCommentThunk({ commentId: comment.id, removedImage: removedImageUrl })).unwrap()
       dispatch(fetchArticleCommentsThunk({ articleId }))
       window.showToast('Success', 'Comment deleted successfully', 'success')
     } catch (err) {
@@ -47,11 +91,6 @@ export default function ArticleCommentItem({
   }
 
   const handleSaveEdit = async () => {
-    if (!editText.trim() || editText === comment.content) {
-      setIsEditing(false)
-      return
-    }
-
     try {
       setUpdateLoading(true)
       await dispatch(
@@ -59,6 +98,9 @@ export default function ArticleCommentItem({
           commentId: comment.id,
           content: editText,
           stats: 'edited',
+          newImage: editImageFile,
+          removedImage: removedImageUrl,
+          articleId: null
         })
       ).unwrap()
 
@@ -93,6 +135,8 @@ export default function ArticleCommentItem({
     }
   }, [editText, isEditing])
 
+  const hasImage = !!editImagePreview
+
   return (
     <div className="mb-3 card rounded-0 p-3">
       <div className="d-flex justify-content-between">
@@ -103,6 +147,60 @@ export default function ArticleCommentItem({
           {timeAgo(comment.created_at)}
         </small>
       </div>
+
+      {/* IMAGE */}
+      <div className="mb-2 mt-2 position-relative d-inline-block">
+        {hasImage ? (
+          <img
+            src={editImagePreview!}
+            alt=""
+            className="img-fluid"
+            style={{ maxHeight: 200, objectFit: "contain" }}
+          />
+        ) : isEditing ? (
+          <div
+            className="bg-light border w-100"
+            style={{ height: 200, display: "flex", alignItems: "center", justifyContent: "center" }}
+          >
+            <span className="text-muted cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+              No image
+            </span>
+          </div>
+        ) : null}
+
+        {/* IMAGE BUTTON (Change/Add) */}
+        {isEditing && (
+          <button
+            type="button"
+            className="btn btn-sm btn-light position-absolute bottom-0 start-0 rounded-0 m-1"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <i className="bi bi-image"></i> {hasImage ? "Change" : "Add"}
+          </button>
+        )}
+
+        {/* REMOVE IMAGE BUTTON */}
+        {isEditing && hasImage && (
+          <button
+            type="button"
+            className="btn btn-sm btn-dark position-absolute top-0 start-0 rounded-0"
+            style={{ padding: "0 6px", lineHeight: 1, fontSize: "0.8rem" }}
+            onClick={removeImage}
+          >
+            ✕
+          </button>
+        )}
+      </div>
+
+      {isEditing && (
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          hidden
+          onChange={handleEditImageChange}
+        />
+      )}
 
       <div className="overflow-auto mb-1">
         {isEditing ? (
@@ -154,6 +252,7 @@ export default function ArticleCommentItem({
               >
                 <small>CANCEL</small>
               </button>
+              <span className="mx-1">|</span>
             </>
           )}
 

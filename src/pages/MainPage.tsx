@@ -272,7 +272,11 @@ export default function MainPage() {
                                 <button
                                   className="btn btn-link p-0 text-success text-decoration-none"
                                   disabled={isDeleting}
-                                  onClick={() => handleDelete(article.id, [])}
+                                  onClick={() => {
+                                    // Extract the URLs of the images to pass to deletion
+                                    const removedImagesUrls = (article.images ?? []).map((img: GridImage) => img.image_url);
+                                    handleDelete(article.id, removedImagesUrls);
+                                  }}
                                 >
                                   {isDeleting ? 'DELETING…' : 'YES'}
                                 </button>

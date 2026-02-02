@@ -91,7 +91,7 @@ export const createArticle = async (
 
   if (files && files.length > 0) {
     for (const file of files) {
-      const filePath = `articles/${Date.now()}_${file.name}`;
+      const filePath = `articles/${crypto.randomUUID()}-${file.name}`;
 
       const { data, error } = await supabase.storage
         .from('article_images')
@@ -147,13 +147,16 @@ export const updateArticle = async (
 
   // delete removed images
   if (removedImages.length > 0) {
-    await supabase.storage
-      .from('article_images')
-      .remove(
-        removedImages.map(url =>
-          url.split('/article_images/')[1]
-        )
-      )
+    const paths = removedImages
+      .map(getArticleImagePath)
+      .filter((p): p is string => Boolean(p))
+
+      console.log('ON UPDATE - STORAGE PATHS:', paths)
+    if (paths.length > 0) {
+      await supabase.storage
+        .from('article_images')
+        .remove(paths)
+    }
   }
   
   const { error } = await supabase.rpc('update_article', {
@@ -172,13 +175,16 @@ export const updateArticle = async (
 export const deleteArticle = async (articleId: string, removedImages: string[]) => {
 
   if (removedImages.length > 0) {
-    await supabase.storage
-      .from('article_images')
-      .remove(
-        removedImages.map(url =>
-          url.split('/article_images/')[1]
-        )
-      )
+    const paths = removedImages
+      .map(getArticleImagePath)
+      .filter((p): p is string => Boolean(p))
+
+    console.log('ON DELETE - STORAGE PATHS:', paths)
+    if (paths.length > 0) {
+      await supabase.storage
+        .from('article_images')
+        .remove(paths)
+    }
   }
   
   const { error } = await supabase.rpc('delete_article', {
@@ -186,4 +192,12 @@ export const deleteArticle = async (articleId: string, removedImages: string[]) 
   })
   if (error) throw error
   return articleId
+}
+
+
+//helper for deletion
+const getArticleImagePath = (url: string) => {
+  const marker = '/article_images/'
+  const idx = url.indexOf(marker)
+  return idx !== -1 ? url.slice(idx + marker.length) : null
 }

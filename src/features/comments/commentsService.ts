@@ -41,7 +41,7 @@ export const fetchArticleComments = async (
   const { data, error } = await supabase.rpc("get_article_comments", {
     p_article_id: articleId,
   });
-  console.log("CHECKING FOR IMAGE DATA: ", data)
+  // console.log("CHECKING FOR IMAGE DATA (FETCH ARTICLE COMMENTS): ", data)
   if (error) throw error;
   return (data ?? []).map((comment: Comment) => ({
     ...comment,
@@ -57,9 +57,8 @@ export const fetchImagesComments = async (
     p_article_id: articleId,
     p_image_id: imageId
   });
- console.log("CHECKING FOR IMAGE DATA: ", data)
+//  console.log("CHECKING FOR IMAGE DATA (FETCH ARTICLE COMMENTS): ", data)
   if (error) throw error;
-  // console.log("fetchImagesComments data:", data);
   return (data ?? []).map((comment: Comment) => ({
     ...comment,
     image: comment.image?.[0] ?? null
@@ -74,7 +73,7 @@ export const createComment = async (
   comment_image: File | null
 ): Promise<Comment> => {
 
-  const filePath = `photos/${Date.now()}_${comment_image?.name}`;
+  const filePath = `photos/${crypto.randomUUID()}-${comment_image?.name}`;
 
   let uploadedUrls: string | null = null;
 
@@ -143,7 +142,7 @@ export const updateComment = async (
 
   // upload new image
   if (newImage) {
-    const filePath = `photos/${Date.now()}_${newImage.name}`;
+    const filePath = `photos/${crypto.randomUUID()}-${newImage.name}`;
 
     const { data, error } = await supabase.storage
       .from('comment_images')
@@ -165,7 +164,7 @@ export const updateComment = async (
       p_comment_id: commentId,
       p_content: content,
       p_status: stats,
-      p_new_image: uploadedUrl,   // ✅ URL or null
+      p_new_image: uploadedUrl,
       p_removed_image: removedImage,
       p_article_id: articleId
     }
